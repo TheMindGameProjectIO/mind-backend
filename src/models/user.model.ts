@@ -1,10 +1,13 @@
+import {Types} from "mongoose";
+
 interface IUser {
-    entityId: string;
+    _id: Types.ObjectId | string;
+    nickname: string;
     email: string;
     password: string;
-    nickname: string;
+    verifiedAt: Date;
+    role: number;
 }
-
 
 interface IUserRegister {
     email: string;

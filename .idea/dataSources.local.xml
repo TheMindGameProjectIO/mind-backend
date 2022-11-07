@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal" created-in="WS-213.6777.57">
+    <data-source name="themindgame@cluster0.tmoe7.mongodb.net" uuid="9944ed8d-97ba-4a6f-9638-1c08512eaf20">
+      <database-info product="Mongo DB" version="5.0.13" jdbc-version="4.2" driver-name="MongoDB JDBC Driver" driver-version="1.16" dbms="MONGO" exact-version="5.0.13" exact-driver-version="1.16" />
+      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <secret-storage>master_key</secret-storage>
+      <user-name>root</user-name>
+      <schema-mapping>
+        <introspection-scope>
+          <node kind="schema" qname="@" />
+        </introspection-scope>
+      </schema-mapping>
+    </data-source>
+  </component>
+</project>

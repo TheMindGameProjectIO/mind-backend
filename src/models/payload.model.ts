@@ -1,5 +1,5 @@
 interface IAuthPayload {
-    entityId: string;
+    _id: string;
 }
 
 export {

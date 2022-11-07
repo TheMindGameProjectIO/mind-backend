@@ -1,13 +1,14 @@
 import {Request, Response} from "express";
 import {IUserRegister, IUserLogin} from "@models/user.model";
-import userRepository, {User} from "@schemas/user.schema";
+import User from "@schemas/user.schema";
 
 
 const register = async (req: Request, res: Response) => {
     const user = req.body as IUserRegister;
-    const userEntity = await User.create(user);
-    await userRepository.save(userEntity);
-    res.send(req.body)
+    const userEntity = new User(user);
+    await userEntity.save((err, user) => {
+        err ? res.handleDBError(err) : res.status(201).send(user);
+    })
 }
 
 const login = async (req: Request, res: Response) => {
@@ -21,10 +22,12 @@ const login = async (req: Request, res: Response) => {
 }
 
 const me = async (req: Request, res: Response) => {
-
+    const user = req.user;
+    return res.send(user);
 }
 
 export {
     register,
-    login
+    login,
+    me
 }

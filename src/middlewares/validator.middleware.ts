@@ -1,8 +1,9 @@
 import * as Joi from "joi";
+import {Request, Response, NextFunction} from "express";
 
 
 const validate = (schema: Joi.ObjectSchema) => {
-    return (req, res, next) => {
+    return (req: Request, res: Response, next: NextFunction) => {
         const { error } = schema.validate(req.body, {convert: true});
         const valid = error == null;
 

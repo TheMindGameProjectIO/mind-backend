@@ -1,76 +1,79 @@
-import {Entity, Schema} from "redis-om";
-import client from "@/setups/db";
-import {IUserRegister} from "@models/user.model";
+import {Model, Schema, HydratedDocument, model} from 'mongoose';
 import {hashPassword} from "@utils/password";
-import {generateAuthToken, verifyAuthToken} from "@utils/token";
+import {UserRole} from "@utils/enum";
+import {generateAuthToken} from "@utils/token";
+import {IUser} from "@models/user.model";
 
 
-interface User {
-    entityId: string;
-    email: string;
-    hashedPassword: string;
-    nickname: string;
-    isActive: boolean;
-    role: number;
+interface IUserMethods {
+    generateAuthToken: (user: IUser) => Promise<string>;
+    // fullName(): string;
 }
 
-class User extends Entity{
-    static async create(user: IUserRegister) {
-        const userEntity = await userRepository.createEntity();
-        userEntity.email = user.email;
-        userEntity.nickname = user.nickname;
-        userEntity.hashedPassword = hashPassword(user.password);
-        userEntity.isActive = false;
-        userEntity.role = 0;
-        return userEntity;
-    }
-
-    set password(password: string) {
-        this.hashedPassword = hashPassword(password);
-    }
-
-    get password() {
-        return this.hashedPassword;
-    }
-
-    async generateAuthToken() {
-        return generateAuthToken(this);
-    }
-
-    static async verifyAuthToken(token: string) {
-        return await verifyAuthToken(token);
-    }
-
-    static async findByEmail(email: string) {
-        return await userRepository.search().where("email").equals(email).return.first();
-    }
-
-
+interface UserModel extends Model<IUser, {}, IUserMethods> {
+    findByEmail(email: string): Promise<HydratedDocument<IUser, IUserMethods>>;
 }
 
-
-const userSchema = new Schema(User, {
-    role: {
-        type: "number",
+const userSchema = new Schema<IUser, UserModel, IUserMethods>({
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+    },
+    password: {
+        type: String,
+        required: true,
+        set: (value: string) => {
+            return hashPassword(value)
+        }
     },
     nickname: {
-        type: 'string',
+        type: String,
+        required: true,
     },
-    email: {
-        type: 'string',
+    verifiedAt: {
+        type: Date,
+        required: false,
+        default: () => new Date(),
     },
-    hashedPassword: {
-        type: 'string',
-    },
-    isActive: {
-        type: 'boolean',
+    role: {
+        type: Number,
+        default: UserRole.Guest,
+        enum: Object.values(UserRole).filter(value => typeof value === 'number')
     },
 }, {
-    dataStructure: 'JSON',
-})
+    methods: {
+        async generateAuthToken() {
+            return await generateAuthToken(this);
+        },
+        // findSimilarTypes(cb) {
+        //     return User.find({ type: this.type }, cb);
+        // }
+    },
+    statics: {
+        findByEmail(email: string) {
+            return User.findOne({email})
+        },
+    },
+});
 
-const userRepository = client.fetchRepository(userSchema)
-await userRepository.createIndex()
 
-export {User}
-export default userRepository;
+// schema.static('createWithFullName', function createWithFullName(name: string) {
+//     const [firstName, lastName] = name.split(' ');
+//     return User.create({ firstName, lastName });
+// });
+//
+// schema.method('fullName', function fullName(): string {
+//     return this.firstName + ' ' + this.lastName;
+// });
+
+const User = model<IUser, UserModel>('users', userSchema);
+
+// User.createWithFullName('Jean-Luc Picard').then(doc => {
+//     console.log(doc.firstName); // 'Jean-Luc'
+//     doc.fullName(); // 'Jean-Luc Picard'
+// });
+
+
+export default User;

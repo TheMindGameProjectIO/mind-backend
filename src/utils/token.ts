@@ -4,7 +4,7 @@ import {IUser} from "@models/user.model";
 import {IAuthPayload} from "@models/payload.model";
 
 const generateAuthToken = async (user: IUser) => {
-    const payload: IAuthPayload = {entityId: user.entityId}
+    const payload: IAuthPayload = {_id: user._id.toString()};
     return jwt.sign(payload, env.SECRET_KEY, {expiresIn: env.TOKEN_AUTH_EXPIRES_IN});
 }
 

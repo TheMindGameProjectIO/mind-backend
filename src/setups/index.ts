@@ -1,5 +1,7 @@
+import "./mode";
+import "./mongo";
 import app from "./route";
-import client, {connection} from "./db";
+import client, {connection} from "./redis";
 
 
 export {
