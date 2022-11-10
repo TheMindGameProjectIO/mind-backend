@@ -26,8 +26,16 @@ const me = async (req: Request, res: Response) => {
     return res.send(user);
 }
 
+const verify = async (req: Request, res: Response) => {
+    const user = req.user;
+    user.verifiedAt = new Date();
+    await user.save();
+    return res.send(user);
+}
+
 export {
     register,
+    verify,
     login,
-    me
+    me,
 }

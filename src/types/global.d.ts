@@ -1,4 +1,4 @@
-import {IUser} from "@models/user.model";
+import {IUserDocument} from "@schemas/user.schema";
 
 export {}
 
@@ -7,7 +7,7 @@ type ErrorHandlerFunction = (message?: string) => void
 declare global {
     namespace Express {
         export interface Request {
-            user?: IUser
+            user?: IUserDocument
         }
         export interface Response {
             handleDBError?: (err: any) => void;

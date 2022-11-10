@@ -6,12 +6,16 @@ import {IUser} from "@models/user.model";
 
 
 interface IUserMethods {
-    generateAuthToken: (user: IUser) => Promise<string>;
+    generateAuthToken: () => Promise<string>;
     // fullName(): string;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
     findByEmail(email: string): Promise<HydratedDocument<IUser, IUserMethods>>;
+}
+
+interface IUserDocument extends IUser, HydratedDocument<IUser, IUserMethods> {
+
 }
 
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
@@ -68,12 +72,10 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
 //     return this.firstName + ' ' + this.lastName;
 // });
 
-const User = model<IUser, UserModel>('users', userSchema);
-
+const User: UserModel = model<IUser, UserModel>('users', userSchema);
 // User.createWithFullName('Jean-Luc Picard').then(doc => {
 //     console.log(doc.firstName); // 'Jean-Luc'
 //     doc.fullName(); // 'Jean-Luc Picard'
 // });
-
-
+export {IUserDocument}
 export default User;
