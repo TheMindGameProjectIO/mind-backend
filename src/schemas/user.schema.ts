@@ -1,8 +1,9 @@
 import {Model, Schema, HydratedDocument, model} from 'mongoose';
 import {hashPassword} from "@utils/password";
-import {UserRole} from "@utils/enum";
+import {DBCollections, UserRole} from "@utils/enum";
 import {generateAuthToken} from "@utils/token";
 import {IUser} from "@models/user.model";
+import Token from "@schemas/token.schema";
 
 
 interface IUserMethods {
@@ -62,8 +63,15 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     },
 });
 
+userSchema.post('save', async function (doc, next) {
+    // Token.createF(doc).then(() => {
+    //
+    // });
+    next();
+})
 
-// schema.static('createWithFullName', function createWithFullName(name: string) {
+
+// schema.public('createWithFullName', function createWithFullName(name: string) {
 //     const [firstName, lastName] = name.split(' ');
 //     return User.create({ firstName, lastName });
 // });
@@ -72,7 +80,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
 //     return this.firstName + ' ' + this.lastName;
 // });
 
-const User: UserModel = model<IUser, UserModel>('users', userSchema);
+const User: UserModel = model<IUser, UserModel>(DBCollections.User, userSchema);
 // User.createWithFullName('Jean-Luc Picard').then(doc => {
 //     console.log(doc.firstName); // 'Jean-Luc'
 //     doc.fullName(); // 'Jean-Luc Picard'

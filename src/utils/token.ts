@@ -8,6 +8,7 @@ const generateAuthToken = async (user: IUser) => {
     return jwt.sign(payload, env.SECRET_KEY, {expiresIn: env.TOKEN_AUTH_EXPIRES_IN});
 }
 
+
 const verifyAuthToken = async (token: string) => {
     return jwt.verify(token, env.SECRET_KEY) as IAuthPayload;
 }

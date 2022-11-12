@@ -18,7 +18,8 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const role = (role: UserRole) => (req: Request, res: Response, next: NextFunction) => {
-    if (req.user.role < role) res.errors.notEnoughPermissions();
+    if (req.user.role < role)
+        res.errors.notEnoughPermissions();
     next();
 }
 
