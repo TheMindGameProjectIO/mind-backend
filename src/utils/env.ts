@@ -20,9 +20,16 @@ const env = {
     EMAIL_USER: String(),
     EMAIL_PASSWORD: String(),
     EMAIL_IS_SECURE: Boolean(),
-    APP_URL: String(),
     APP_WEB_URL: String(),
+    APP_HOST: String(),
+    APP_PORT: Number(),
 
+    SOCKET_HOST: String(),
+    SOCKET_PORT: Number(),
+
+    get APP_URL(){
+        return `http://${this.APP_HOST}:${this.APP_PORT}`
+    },
     get APP_API_URL() {
         return `${this.APP_URL}/api`;
     },

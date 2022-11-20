@@ -44,7 +44,8 @@ io.use(async (socket, next) => {
         })
     });
 
-console.log("socket server ready to start on port 8000");
-io.listen(3000);
+console.log(`socket server ready to start on port ${env.SOCKET_PORT}`);
+io.listen(env.SOCKET_PORT);
+
 export default io;
 
