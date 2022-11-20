@@ -5,3 +5,11 @@ const runQuery = async (callback: any) => {
         console.log(e);
     }
 }
+
+const isModified = (query: any, field: string) => {
+    return !!query.getUpdate().$set[field] || !!query.getUpdate()[field];
+}
+
+export {
+    isModified
+}

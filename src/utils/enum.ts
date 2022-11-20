@@ -4,6 +4,18 @@ enum UserRole {
     Admin = 2,
 }
 
+enum DBCollections {
+    User = 'users',
+    Token = 'tokens',
+}
+
+enum TokenType {
+    EmailVerification = 'email_verification',
+    PasswordReset = 'password_reset',
+}
+
 export {
-    UserRole
+    UserRole,
+    DBCollections,
+    TokenType
 }

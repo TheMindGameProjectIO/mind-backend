@@ -5,6 +5,8 @@ export {}
 type ErrorHandlerFunction = (message?: string) => void
 
 declare global {
+    type Email = string;
+    type Html = string;
     namespace Express {
         export interface Request {
             user?: IUserDocument

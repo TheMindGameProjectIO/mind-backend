@@ -1,8 +1,13 @@
-import {Model, Schema, HydratedDocument, model} from 'mongoose';
+import {Model, Schema, HydratedDocument, model, PreSaveMiddlewareFunction, Query} from 'mongoose';
 import {hashPassword} from "@utils/password";
-import {UserRole} from "@utils/enum";
+import {DBCollections, UserRole} from "@utils/enum";
 import {generateAuthToken} from "@utils/token";
 import {IUser} from "@models/user.model";
+import Token from "@schemas/token.schema";
+import * as util from "util";
+import {getCurrentDate} from "@utils/datetime";
+import socketHandler from "@/socket";
+import {isModified} from "@utils/query";
 
 
 interface IUserMethods {
@@ -18,6 +23,7 @@ interface IUserDocument extends IUser, HydratedDocument<IUser, IUserMethods> {
 
 }
 
+
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     email: {
         type: String,
@@ -25,12 +31,17 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
         unique: true,
         index: true,
     },
+    passwordUpdatedAt: {
+        type: Date,
+        required: true,
+        default: () => getCurrentDate(),
+    },
     password: {
         type: String,
         required: true,
         set: (value: string) => {
             return hashPassword(value)
-        }
+        },
     },
     nickname: {
         type: String,
@@ -39,7 +50,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     verifiedAt: {
         type: Date,
         required: false,
-        default: () => new Date(),
+        default: null,
     },
     role: {
         type: Number,
@@ -47,6 +58,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
         enum: Object.values(UserRole).filter(value => typeof value === 'number')
     },
 }, {
+    timestamps: true,
     methods: {
         async generateAuthToken() {
             return await generateAuthToken(this);
@@ -62,20 +74,27 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     },
 });
 
+userSchema.post('save', async function (doc, next) {
+    next();
+})
 
-// schema.static('createWithFullName', function createWithFullName(name: string) {
-//     const [firstName, lastName] = name.split(' ');
-//     return User.create({ firstName, lastName });
-// });
-//
-// schema.method('fullName', function fullName(): string {
-//     return this.firstName + ' ' + this.lastName;
-// });
+userSchema.post('updateOne', async function(doc, next) {
+    if (isModified(this, 'verifiedAt')) {
+        // @ts-ignore
+        socketHandler.emitEventToUser(this.getQuery(), 'auth:verified:email');
+    }
+    next();
+});
 
-const User: UserModel = model<IUser, UserModel>('users', userSchema);
-// User.createWithFullName('Jean-Luc Picard').then(doc => {
-//     console.log(doc.firstName); // 'Jean-Luc'
-//     doc.fullName(); // 'Jean-Luc Picard'
-// });
+userSchema.pre('updateOne', async function(next) {
+    if (isModified(this, 'password')) {
+        this.set({passwordUpdatedAt: getCurrentDate()});
+    } if (isModified(this, 'verifiedAt')) {
+        this.set({role: UserRole.User});
+    }
+    next();
+});
+
+const User: UserModel = model<IUser, UserModel>(DBCollections.User, userSchema);
 export {IUserDocument}
 export default User;
