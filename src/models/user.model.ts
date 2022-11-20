@@ -7,6 +7,7 @@ interface IUser {
     password: string;
     verifiedAt: Date;
     role: number;
+    passwordUpdatedAt: Date;
 }
 
 interface IUserRegister {

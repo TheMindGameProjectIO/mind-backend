@@ -13,11 +13,20 @@ const register = async (req: Request, res: Response) => {
     const session = await startSession()
     try{
         session.startTransaction();
+        const prevUser = await User.findByEmail(user.email);
+        if (prevUser) {
+            if (prevUser.verifiedAt) {
+                return res.status(400).send({error: "User already exists"});
+            } else {
+                await User.deleteOne({_id: prevUser._id}).session(session);
+            }
+        }
         const userEntity = new User(user);
         await userEntity.save({session});
         await Token.createFromUser(userEntity, TokenType.EmailVerification);
+        const token = await userEntity.generateAuthToken();
+        res.setHeader('Authorization', token).send(userEntity);
         await session.commitTransaction();
-        res.send(userEntity);
     } catch (err) {
         await session.abortTransaction();
         res.handleDBError(err);
@@ -42,16 +51,30 @@ const me = async (req: Request, res: Response) => {
 }
 
 const verify = async (req: Request, res: Response) => {
-    const tokenEntity = await Token.findByIdWithUser(req.params.token);
+    const tokenEntity = await Token.findOne({value: req.params.token});
     if (tokenEntity) {
-        const userEntity = tokenEntity.userId;
-        userEntity.verifiedAt = getCurrentDate();
+        await User.updateOne({_id: tokenEntity.userId}, {verifiedAt: getCurrentDate()});
         return res.send({message: "User verified successfully"});
     }
     return res.status(404).send({error: "Token not found"});
 }
 
+const passwordResetToken = async (req: Request, res: Response) => {
+    res.send({message: "Password reset token sent successfully"});
+}
+
+const passwordReset = async (req: Request, res: Response) => {
+    res.send({message: "Password reset successfully"});
+}
+
+const passwordChange = async (req: Request, res: Response) => {
+    res.send({message: "Password changed successfully"});
+}
+
 export {
+    passwordResetToken,
+    passwordChange, 
+    passwordReset,
     register,
     verify,
     login,

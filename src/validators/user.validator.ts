@@ -1,15 +1,18 @@
 import Joi from "joi";
 
+const UserEmail = Joi.string().email().required();
+const UserPassword = Joi.string().min(6).required();
+
 const UserRegister = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
+    email: UserEmail,
+    password: UserPassword,
     confirmPassword: Joi.any().valid(Joi.ref('password')).required(),
     nickname: Joi.string().min(3).required(),
 });
 
 const UserLogin = Joi.object({
-    password: Joi.string().min(6).required(),
-    email: Joi.string().email().required(),
+    password: UserPassword,
+    email: UserEmail,
 });
 
 export {

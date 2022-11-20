@@ -7,7 +7,7 @@ import User, {IUserDocument} from "@schemas/user.schema";
 import {getCurrentDate, getExpireDate} from "@utils/datetime";
 import env from "@utils/env";
 import * as crypto from "crypto";
-import {sendEmail} from "@utils/email";
+import {sendEmail} from "@queues/email.queue";
 import hbs from "@setups/view";
 
 interface ITokenMethods {
@@ -72,10 +72,18 @@ tokenSchema.virtual('user', {
 
 tokenSchema.post('save', async function (doc, next) {
     const user = await User.findById(doc.userId).session(doc.$session());
-    const html = await hbs.render("./public/views/email_verification.handlebars",
-        {verification_link:`${env.APP_API_URL}/auth/verify/${doc.value}`, web_url: env.APP_WEB_URL}
-    )
-    await sendEmail(user.email, html);
+    if (doc.type === TokenType.EmailVerification) {
+        const html = await hbs.render("./public/views/email_verification.handlebars",
+            {verification_link:`${env.APP_API_URL}/auth/verify/${doc.value}`, web_url: env.APP_WEB_URL}
+        )
+        await sendEmail({email: user.email, html});
+    } else if (doc.type === TokenType.PasswordReset) {
+        const html = await hbs.render("./public/views/password_reset.handlebars",
+            {reset_link:`${env.APP_WEB_URL}/auth/password-reset/${doc.value}`}
+        )
+        await sendEmail({email: user.email, html});
+    }   
+
     next();
 })
 
