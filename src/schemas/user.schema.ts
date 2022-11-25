@@ -1,6 +1,6 @@
 import {Model, Schema, HydratedDocument, model, PreSaveMiddlewareFunction, Query} from 'mongoose';
 import {hashPassword} from "@utils/password";
-import {DBCollections, UserRole} from "@utils/enum";
+import {DBCollections, getKeysFromEnum, getValuesFromEnum, UserRole} from "@utils/enum";
 import {generateAuthToken} from "@utils/token";
 import {IUser} from "@models/user.model";
 import Token from "@schemas/token.schema";
@@ -11,8 +11,7 @@ import {isModified} from "@utils/query";
 
 
 interface IUserMethods {
-    generateAuthToken: () => Promise<string>;
-    // fullName(): string;
+    generateAuthToken(): string;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
@@ -55,13 +54,13 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     role: {
         type: Number,
         default: UserRole.Guest,
-        enum: Object.values(UserRole).filter(value => typeof value === 'number')
+        enum: getValuesFromEnum(UserRole),
     },
 }, {
     timestamps: true,
     methods: {
-        async generateAuthToken() {
-            return await generateAuthToken(this);
+        generateAuthToken() {
+            return generateAuthToken(this);
         },
         // findSimilarTypes(cb) {
         //     return User.find({ type: this.type }, cb);
@@ -81,7 +80,9 @@ userSchema.post('save', async function (doc, next) {
 userSchema.post('updateOne', async function(doc, next) {
     if (isModified(this, 'verifiedAt')) {
         // @ts-ignore
-        socketHandler.emitEventToUser(this.getQuery(), 'auth:verified:email');
+        const user = await User.findById(this.getQuery());
+        socketHandler.emitEventToUser(user, 'auth:verified:email');
+        Token.updateOne({userId: user._id}, {verifiedAt: user.verifiedAt}, {multi: true}).exec();
     }
     next();
 });

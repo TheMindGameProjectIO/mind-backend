@@ -1,6 +1,6 @@
 import {Model, Schema, HydratedDocument, model, Types, SaveOptions} from 'mongoose';
 import {hashPassword} from "@utils/password";
-import {DBCollections, TokenType, UserRole} from "@utils/enum";
+import {DBCollections, getKeysFromEnum, getValuesFromEnum, TokenType, UserRole} from "@utils/enum";
 import {generateAuthToken} from "@utils/token";
 import {IToken} from "@models/token.model";
 import User, {IUserDocument} from "@schemas/user.schema";
@@ -35,12 +35,23 @@ const tokenSchema = new Schema<IToken, TokenModel, ITokenMethods>({
         type: Schema.Types.ObjectId,
         ref: DBCollections.User,
     },
-
+    type: {
+        type: Number,
+        required: true,
+        enum: getValuesFromEnum(TokenType),
+    },
+    verifiedAt: {
+        type: Date,
+        required: false,
+        default: null,
+    },
 }, {
     virtuals: {
 
     },
-    methods: {},
+    methods: {
+        
+    },
     statics: {
         createFromUser(user: IUserDocument, type: TokenType): Promise<ITokenDocument> {
             const token = new Token({
@@ -72,6 +83,7 @@ tokenSchema.virtual('user', {
 
 tokenSchema.post('save', async function (doc, next) {
     const user = await User.findById(doc.userId).session(doc.$session());
+
     if (doc.type === TokenType.EmailVerification) {
         const html = await hbs.render("./public/views/email_verification.handlebars",
             {verification_link:`${env.APP_API_URL}/auth/verify/${doc.value}`, web_url: env.APP_WEB_URL}

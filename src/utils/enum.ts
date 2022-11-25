@@ -10,12 +10,30 @@ enum DBCollections {
 }
 
 enum TokenType {
-    EmailVerification = 'email_verification',
-    PasswordReset = 'password_reset',
+    EmailVerification = 0,
+    PasswordReset = 1,
+}
+
+enum Header {
+    Authorization = 'Authorization',
+}
+
+type Permission = 'auth:password:reset'
+
+const getKeysFromEnum = (enumObject: any) => {
+    return Object.keys(enumObject).filter(key => typeof enumObject[key] === 'number');
+}
+
+const getValuesFromEnum = (enumObject: any) => {
+    return Object.keys(enumObject).filter(key => typeof enumObject[key] === 'number').map(key => enumObject[key]);
 }
 
 export {
+    getKeysFromEnum,
+    getValuesFromEnum,
+    Header,
     UserRole,
+    TokenType,
+    Permission,
     DBCollections,
-    TokenType
 }

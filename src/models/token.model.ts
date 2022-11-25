@@ -6,6 +6,7 @@ interface IToken {
     value: string;
     userId: Types.ObjectId | string;
     type: TokenType;
+    verifiedAt: Date | null;
 }
 
 export {

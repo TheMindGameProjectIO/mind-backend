@@ -15,6 +15,9 @@ interface SocketData {
     user: IUser | null;
 }
 
+export type ServerToClientEvent = keyof ServerToClientEvents;
+export type ClientToServerEvent = keyof ClientToServerEvents;
+
 export {
     ServerToClientEvents,
     ClientToServerEvents,

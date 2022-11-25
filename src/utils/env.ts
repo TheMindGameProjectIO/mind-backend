@@ -23,6 +23,7 @@ const env = {
     APP_WEB_URL: String(),
     APP_HOST: String(),
     APP_PORT: Number(),
+    TOKEN_PERMISSION_EXPIRES_IN: Number(),
 
     SOCKET_HOST: String(),
     SOCKET_PORT: Number(),
