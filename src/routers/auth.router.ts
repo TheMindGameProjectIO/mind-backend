@@ -22,7 +22,7 @@ router.post("/register", validate(UserRegister), register);
 router.get("/me", authenticate, role(UserRole.Guest), me);
 router.get("/verify/:token", verify);
 router.post("/password/reset/token", passwordResetToken);
-router.post("/password/reset/:token", passwordResetVerify);
+router.get("/password/reset/:token", passwordResetVerify);
 router.post("/password/reset", passwordReset);
 router.post("/password/change", passwordChange);
 router.get("/test", test);

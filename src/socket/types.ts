@@ -3,6 +3,7 @@ import { Socket } from "socket.io";
 
 interface ServerToClientEvents {
     "auth:verified:email": () => void;
+    "auth:verified:password:reset": ({ token }: { token: string }) => void;
 }
 
 interface ClientToServerEvents {}

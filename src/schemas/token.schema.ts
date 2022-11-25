@@ -93,7 +93,7 @@ tokenSchema.post("save", async function (doc, next) {
         await sendEmail({ email: user.email, html });
     } else if (doc.type === TokenType.PasswordReset) {
         const html = await hbs.render("./public/views/password_reset.handlebars", {
-            reset_link: `${env.APP_WEB_URL}/auth/password-reset/${doc.value}`,
+            reset_link: `${env.APP_WEB_URL}/auth/password/reset/${doc.value}`,
         });
         await sendEmail({ email: user.email, html });
     }

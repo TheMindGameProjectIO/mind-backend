@@ -6,6 +6,7 @@ import Token from "@schemas/token.schema";
 import { Header, TokenType } from "@utils/enum";
 import { getCurrentDate } from "@utils/datetime";
 import { generateSocketToken } from "@/utils/token";
+import socketHandler from "@/socket";
 
 const register = async (req: Request, res: Response) => {
     const user = req.body as IUserRegister;
@@ -60,25 +61,38 @@ const verify = async (req: Request, res: Response) => {
     return res.status(404).send({ error: "Token not found" });
 };
 
-const passwordResetToken = async (req: Request, res: Response) => {
-    const email = req.params.email;
+const passwordResetToken = async (req: Request<{}, {}, { email: string }>, res: Response) => {
+    const email = req.body.email;
     const userEntity = await User.findByEmail(email);
     if (!userEntity) return res.status(404).send({ error: "User not found" });
+    await Token.deleteOne({ userId: userEntity._id, type: TokenType.PasswordReset });
     await Token.createFromUser(userEntity, TokenType.PasswordReset);
     const token = generateSocketToken({ _id: req.session.id });
     res.setHeader(Header.SocketAuthorization, token).send({ message: "Password reset token sent on your email" });
 };
 
 export const passwordResetVerify = async (req: Request, res: Response) => {
-    const token = req.query.token;
+    const token = req.query.token as string;
     const tokenEntity = await Token.findOne({ value: token });
     if (!tokenEntity) return res.status(404).send({ error: "Token not found" });
     await tokenEntity.verify();
 
+    socketHandler.emitTo(req.session.id, "auth:verified:password:reset", { token });
+
     res.send({ message: "Password reset successfully" });
 };
 
-const passwordReset = async (req: Request, res: Response) => {
+const passwordReset = async (req: Request<{}, {}, { token: string; password: string }>, res: Response) => {
+    const { token, password } = req.body;
+
+    const tokenEntity = await Token.findOne({ value: token });
+    if (!tokenEntity) return res.status(404).send({ error: "Token not found" });
+    if (tokenEntity.type !== TokenType.PasswordReset) return res.status(400).send({ error: "Invalid token" });
+    if (tokenEntity.expiresAt < getCurrentDate()) return res.status(400).send({ error: "Token has expired" });
+    if (!tokenEntity.verifiedAt) return res.status(400).send({ error: "Token is not verified" });
+
+    await User.updateOne({ _id: tokenEntity.userId }, { password: password });
+
     res.send({ message: "Password reset successfully" });
 };
 
