@@ -5,8 +5,8 @@ enum UserRole {
 }
 
 enum DBCollections {
-    User = 'users',
-    Token = 'tokens',
+    User = "users",
+    Token = "tokens",
 }
 
 enum TokenType {
@@ -15,22 +15,18 @@ enum TokenType {
 }
 
 enum Header {
-    Authorization = 'Authorization',
+    Authorization = "Authorization",
+    SocketAuthorization = "Socket-Authorization",
 }
 
 const getKeysFromEnum = (enumObject: any) => {
-    return Object.keys(enumObject).filter(key => typeof enumObject[key] === 'number');
-}
+    return Object.keys(enumObject).filter((key) => typeof enumObject[key] === "number");
+};
 
 const getValuesFromEnum = (enumObject: any) => {
-    return Object.keys(enumObject).filter(key => typeof enumObject[key] === 'number').map(key => enumObject[key]);
-}
+    return Object.keys(enumObject)
+        .filter((key) => typeof enumObject[key] === "number")
+        .map((key) => enumObject[key]);
+};
 
-export {
-    getKeysFromEnum,
-    getValuesFromEnum,
-    Header,
-    UserRole,
-    TokenType,
-    DBCollections,
-}
+export { getKeysFromEnum, getValuesFromEnum, Header, UserRole, TokenType, DBCollections };
