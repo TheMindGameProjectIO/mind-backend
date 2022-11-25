@@ -1,8 +1,8 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const E = (ENV: string) => process.env[ENV]
+const E = (ENV: string) => process.env[ENV];
 
 const env = {
     REDIS_DB_HOST: String(),
@@ -24,51 +24,49 @@ const env = {
     APP_HOST: String(),
     APP_PORT: Number(),
     TOKEN_PERMISSION_EXPIRES_IN: Number(),
+    TOKEN_SOCKET_EXPIRES_IN: Number(),
 
     SOCKET_HOST: String(),
     SOCKET_PORT: Number(),
 
-    get APP_URL(){
-        return `http://${this.APP_HOST}:${this.APP_PORT}`
+    get APP_URL() {
+        return `http://${this.APP_HOST}:${this.APP_PORT}`;
     },
     get APP_API_URL() {
         return `${this.APP_URL}/api`;
     },
     get REDIS_DB_URL() {
-        return `redis://${this.REDIS_DB_USERNAME}:${this.REDIS_DB_PASSWORD}@${this.REDIS_DB_HOST}`
+        return `redis://${this.REDIS_DB_USERNAME}:${this.REDIS_DB_PASSWORD}@${this.REDIS_DB_HOST}`;
     },
     get MONGO_DB_URL() {
-        return `mongodb+srv://${this.MONGO_DB_USERNAME}:${this.MONGO_DB_PASSWORD}@${this.MONGO_DB_HOST}`
+        return `mongodb+srv://${this.MONGO_DB_USERNAME}:${this.MONGO_DB_PASSWORD}@${this.MONGO_DB_HOST}`;
     },
     get IS_DEV() {
-        return this.MODE === 'development'
+        return this.MODE === "development";
     },
     get IS_PROD() {
-        return this.MODE === 'production'
+        return this.MODE === "production";
     },
     load: () => {
         for (let key in env) {
             const desc = Object.getOwnPropertyDescriptor(env, key);
             if (desc && !desc.get && !desc.set) {
                 switch (typeof env[key]) {
-                    case 'string':
+                    case "string":
                         env[key] = String(E(key));
                         break;
-                    case 'number':
+                    case "number":
                         env[key] = Number(E(key));
                         break;
-                    case 'boolean':
+                    case "boolean":
                         env[key] = Boolean(E(key));
                         break;
                 }
             }
-
         }
-    }
-}
+    },
+};
 
-env.load()
+env.load();
 
 export default env;
-
-
