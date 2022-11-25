@@ -1,15 +1,14 @@
-import { Permission } from "@utils/enum";
+import { Permission } from "@utils/types";
 
-interface IAuthPayload {
+export interface IAuthPayload {
     _id: string;
 }
 
-interface IPermissionPayload {
+export interface IPermissionPayload {
     _id: string;
     permissions: Permission[];
 }
 
-export {
-    IAuthPayload,
-    IPermissionPayload,
+export interface ISocketAuthPayload {
+    _id: string;
 }

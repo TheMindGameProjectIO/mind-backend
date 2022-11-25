@@ -18,8 +18,6 @@ enum Header {
     Authorization = 'Authorization',
 }
 
-type Permission = 'auth:password:reset'
-
 const getKeysFromEnum = (enumObject: any) => {
     return Object.keys(enumObject).filter(key => typeof enumObject[key] === 'number');
 }
@@ -34,6 +32,5 @@ export {
     Header,
     UserRole,
     TokenType,
-    Permission,
     DBCollections,
 }
