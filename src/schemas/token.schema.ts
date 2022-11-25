@@ -50,7 +50,7 @@ const tokenSchema = new Schema<IToken, TokenModel, ITokenMethods>(
     {
         virtuals: {},
         methods: {
-            verifY() {
+            verify() {
                 return Token.updateOne({ _id: this._id }, { verifiedAt: getCurrentDate() });
             },
         },

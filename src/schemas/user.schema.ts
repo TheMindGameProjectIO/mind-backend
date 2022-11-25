@@ -11,10 +11,12 @@ import { isModified } from "@utils/query";
 
 interface IUserMethods {
     generateAuthToken(): string;
+    checkPassword(password: string): boolean;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
     findByEmail(email: string): Promise<HydratedDocument<IUser, IUserMethods>>;
+    changePassword(user: { _id: Pick<IUser, "_id"> }, password: string);
 }
 
 interface IUserDocument extends IUser, HydratedDocument<IUser, IUserMethods> {}
@@ -60,6 +62,9 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
             generateAuthToken() {
                 return generateAuthToken(this);
             },
+            checkPassword(password: string) {
+                return hashPassword(password) === this.password;
+            },
             // findSimilarTypes(cb) {
             //     return User.find({ type: this.type }, cb);
             // }
@@ -67,6 +72,15 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
         statics: {
             findByEmail(email: string) {
                 return User.findOne({ email });
+            },
+            changePassword(user: { _id: Pick<IUser, "_id"> }, password: string) {
+                return User.updateOne(
+                    { _id: user._id },
+                    {
+                        password,
+                        passwordUpdatedAt: getCurrentDate(),
+                    }
+                );
             },
         },
     }

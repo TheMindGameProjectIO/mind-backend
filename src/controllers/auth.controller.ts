@@ -37,14 +37,15 @@ const register = async (req: Request, res: Response) => {
     }
 };
 
-const login = async (req: Request, res: Response) => {
-    const user = req.body as IUserLogin;
-    const userEntity = await User.findByEmail(user.email);
-    if (userEntity) {
-        const token = userEntity.generateAuthToken();
-        return res.setHeader("Authorization", token).send(userEntity);
-    }
-    return res.status(401).send({ error: "Invalid credentials" });
+const login = async (req: Request<{}, {}, IUserLogin>, res: Response) => {
+    const { email, password } = req.body as IUserLogin;
+    const userEntity = await User.findByEmail(email);
+    if (!userEntity) return res.status(404).send({ error: "Invalid email or password" });
+    if (!userEntity.verifiedAt) return res.status(400).send({ error: "User is not verified" });
+    if (!userEntity.checkPassword(password)) return res.status(400).send({ error: "Invalid email or password" });
+
+    const token = userEntity.generateAuthToken();
+    return res.setHeader("Authorization", token).send(userEntity);
 };
 
 const me = async (req: Request, res: Response) => {
@@ -71,15 +72,16 @@ const passwordResetToken = async (req: Request<{}, {}, { email: string }>, res: 
     res.setHeader(Header.SocketAuthorization, token).send({ message: "Password reset token sent on your email" });
 };
 
-export const passwordResetVerify = async (req: Request, res: Response) => {
-    const token = req.query.token as string;
+export const passwordResetVerify = async (req: Request<{ token: string }>, res: Response) => {
+    const token = req.params.token as string;
     const tokenEntity = await Token.findOne({ value: token });
+    console.log({ tokenEntity });
     if (!tokenEntity) return res.status(404).send({ error: "Token not found" });
     await tokenEntity.verify();
 
     socketHandler.emitTo(req.session.id, "auth:verified:password:reset", { token });
 
-    res.send({ message: "Password reset successfully" });
+    res.send({ message: "Password can be reset" });
 };
 
 const passwordReset = async (req: Request<{}, {}, { token: string; password: string }>, res: Response) => {
@@ -91,7 +93,7 @@ const passwordReset = async (req: Request<{}, {}, { token: string; password: str
     if (tokenEntity.expiresAt < getCurrentDate()) return res.status(400).send({ error: "Token has expired" });
     if (!tokenEntity.verifiedAt) return res.status(400).send({ error: "Token is not verified" });
 
-    await User.updateOne({ _id: tokenEntity.userId }, { password: password });
+    await User.changePassword({ _id: tokenEntity.userId }, password);
 
     res.send({ message: "Password reset successfully" });
 };
