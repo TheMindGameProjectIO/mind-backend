@@ -6,6 +6,7 @@
     "type": "module",
     "scripts": {
         "build": "npx tsc && npx tsc-alias",
+        "test": "node ./index.js",
         "start": "node --es-module-specifier-resolution=node dist/index.js",
         "prod": "node --es-module-specifier-resolution=node dist/index.js",
         "dev": "nodemon -e ts --exec \"npm run build && npm run start\" --ignore dist"
