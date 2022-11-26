@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import morgan from "morgan";
 import compression from "compression";
 import session, { SessionOptions } from "express-session";
 import { injectErrorDBHandlerToResponse, injectDefaultErrors } from "@/middlewares/error.middleware";
@@ -8,6 +9,7 @@ import { fileURLToPath } from "url";
 import hbs from "@setups/view";
 const app = express();
 app.use(compression());
+app.use(morgan("combined"));
 
 var sess: SessionOptions = {
     secret: "keyboard cat",
