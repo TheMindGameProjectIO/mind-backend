@@ -1,25 +1,18 @@
-import {IUser} from "@models/user.model";
-import {Socket} from "socket.io";
+import { IUser } from "@models/user.model";
+import { Socket } from "socket.io";
 
 interface ServerToClientEvents {
-    'auth:verified:email': () => void;
+    "auth:verified:email": () => void;
+    "auth:verified:password:reset": ({ token }: { token: string }) => void;
 }
 
-interface ClientToServerEvents {
-}
+interface ClientToServerEvents {}
 
-interface InterServerEvents {
-}
+interface InterServerEvents {}
 
-interface SocketData {
-    user: IUser | null;
-}
+export type ServerToClientEvent = keyof ServerToClientEvents;
+export type ClientToServerEvent = keyof ClientToServerEvents;
 
-export {
-    ServerToClientEvents,
-    ClientToServerEvents,
-    InterServerEvents,
-    SocketData
-}
+export { ServerToClientEvents, ClientToServerEvents, InterServerEvents };
 
-export type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>
+export type ISocket = Socket<ServerToClientEvents, ClientToServerEvents>;
