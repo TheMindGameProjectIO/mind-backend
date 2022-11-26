@@ -1,11 +1,10 @@
-# create basic github action for nodejs app to deploy to digital ocean
-
 name: Deploy to Digital Ocean
 
 on:
 	push:
-		branches:
-			- master
+		branches: [master]
+	pull_request:
+		branches: [master]
 
 jobs:
 	deploy:
