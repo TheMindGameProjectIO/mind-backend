@@ -5,6 +5,7 @@
     "main": "src/index.ts",
     "type": "module",
     "scripts": {
+        "pm2": "pm2 start npm --name \"themindgame\" -- run start",
         "build": "npx tsc && npx tsc-alias",
         "test": "node ./index.js",
         "start": "node --es-module-specifier-resolution=node dist/index.js",
