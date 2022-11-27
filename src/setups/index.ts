@@ -1,3 +1,4 @@
+import "./env";
 import "./mode";
 import "./mongo";
 import app from "./route";

@@ -7,20 +7,27 @@ import { injectErrorDBHandlerToResponse, injectDefaultErrors } from "@/middlewar
 import path from "path";
 import { fileURLToPath } from "url";
 import hbs from "@setups/view";
+import env from "@/utils/env";
+import connectRedis from 'connect-redis';
+import { connection } from "./redis";
+
+const RedisStore = connectRedis(session);
+
 const app = express();
 app.use(compression());
 app.use(morgan("combined"));
 
 var sess: SessionOptions = {
-    secret: "keyboard cat",
+    secret: env.SESSION_SECRET_KEY,
     resave: false,
     saveUninitialized: true,
+    store: new RedisStore({ client: connection }),
     cookie: {
         secure: false,
     },
 };
 
-if (app.get("env") === "production") {
+if (env.IS_PROD) {
     app.set("trust proxy", 1); // trust first proxy
     sess.cookie.secure = true; // serve secure cookies
 }
