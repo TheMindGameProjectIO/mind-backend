@@ -1,7 +1,7 @@
 import env from "@utils/env";
 import nodemailer from "nodemailer"
 
-const sendEmail = async (recipient: string, html: string) => {
+const sendEmail = async (recipient: string, html: string, subject: string) => {
 
     nodemailer.createTransport({
         service: 'mail',
@@ -17,7 +17,7 @@ const sendEmail = async (recipient: string, html: string) => {
             {
                 from: env.EMAIL_USER,
                 to: recipient,
-                subject: 'Account Verification',
+                subject,
                 html,
                 attachments: [],
             },

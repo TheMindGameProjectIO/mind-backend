@@ -1,14 +1,12 @@
-import { Model, Schema, HydratedDocument, model, Types, SaveOptions } from "mongoose";
-import { hashPassword } from "@utils/password";
-import { DBCollections, getKeysFromEnum, getValuesFromEnum, TokenType, UserRole } from "@utils/enum";
-import { generateAuthToken } from "@utils/token";
+import { Model, Schema, HydratedDocument, model } from "mongoose";
+import { DBCollections, getValuesFromEnum, TokenType } from "@utils/enum";
 import { IToken } from "@models/token.model";
 import User, { IUserDocument } from "@schemas/user.schema";
 import { getCurrentDate, getExpireDate } from "@utils/datetime";
 import env from "@utils/env";
 import * as crypto from "crypto";
 import { sendEmail } from "@queues/email.queue";
-import hbs from "@setups/view";
+import { render } from "@/utils/html";
 
 interface ITokenMethods {
     verify: () => Promise<void>;
@@ -86,16 +84,16 @@ tokenSchema.post("save", async function (doc, next) {
     const user = await User.findById(doc.userId).session(doc.$session());
 
     if (doc.type === TokenType.EmailVerification) {
-        const html = await hbs.render("./public/views/email_verification.handlebars", {
+        const html = await render('email_verification', {
             verification_link: `${env.APP_API_URL}/auth/verify/${doc.value}`,
             web_url: env.APP_WEB_URL,
         });
-        await sendEmail({ email: user.email, html });
+        await sendEmail({ email: user.email, html, subject: "Email Verification" });
     } else if (doc.type === TokenType.PasswordReset) {
-        const html = await hbs.render("./public/views/password_reset.handlebars", {
+        const html = await render("password_reset", {
             reset_link: `${env.APP_WEB_URL}/auth/password/reset/${doc.value}`,
         });
-        await sendEmail({ email: user.email, html });
+        await sendEmail({ email: user.email, html, subject: "Password Reset" });
     }
 
     next();

@@ -4,6 +4,8 @@ enum UserRole {
     Admin = 2,
 }
 
+export type HbsTemplate = "email_verification" | "password_reset" | "contactus_form_submitted_successfully" | "contactus_form"
+
 enum DBCollections {
     User = "users",
     Token = "tokens",
