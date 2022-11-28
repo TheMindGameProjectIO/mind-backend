@@ -10,6 +10,7 @@ import hbs from "@setups/view";
 import env from "@/utils/env";
 import connectRedis from 'connect-redis';
 import { connection } from "./redis";
+import { getValuesFromEnum, Header } from "@/utils/enum";
 
 const RedisStore = connectRedis(session);
 
@@ -40,8 +41,10 @@ const __dirname = path.dirname(__filename);
 app.use(
     cors({
         origin: ["http://localhost:3000"],
+        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header)],
     })
 );
+
 app.use(express.json());
 app.use(injectErrorDBHandlerToResponse);
 app.use(injectDefaultErrors);

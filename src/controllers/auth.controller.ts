@@ -45,7 +45,7 @@ const login = async (req: Request<{}, {}, IUserLogin>, res: Response) => {
     if (!userEntity.checkPassword(password)) return res.status(400).send({ error: "Invalid email or password" });
 
     const token = userEntity.generateAuthToken();
-    return res.setHeader("Authorization", token).send(userEntity);
+    return res.setHeader(Header.Authorization, token).send(userEntity);
 };
 
 const me = async (req: Request, res: Response) => {

@@ -22,12 +22,11 @@ enum Header {
 }
 
 const getKeysFromEnum = (enumObject: any) => {
-    return Object.keys(enumObject).filter((key) => typeof enumObject[key] === "number");
+    return Object.keys(enumObject);
 };
 
 const getValuesFromEnum = (enumObject: any) => {
     return Object.keys(enumObject)
-        .filter((key) => typeof enumObject[key] === "number")
         .map((key) => enumObject[key]);
 };
 
