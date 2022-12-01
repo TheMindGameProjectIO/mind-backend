@@ -9,6 +9,7 @@ import {
     passwordResetVerify,
     passwordResetToken,
     test,
+    test1,
 } from "@controllers/auth.controller";
 import { UserLogin, UserRegister } from "@validators/user.validator";
 import validate from "@middlewares/validator.middleware";
@@ -26,5 +27,6 @@ router.get("/password/reset/:token", passwordResetVerify);
 router.post("/password/reset", passwordReset);
 router.post("/password/change", passwordChange);
 router.get("/test", test);
+router.get("/test1", test1);
 
 export default router;

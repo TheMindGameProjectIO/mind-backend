@@ -107,4 +107,9 @@ const test = async (req: Request, res: Response) => {
     res.send({ message: "Test", id: req.session.id });
 };
 
-export { passwordResetToken, passwordChange, passwordReset, register, verify, login, test, me };
+const test1 = async (req: Request, res: Response) => {
+    req.session.id;
+    res.send({ message: "Salam Javid Muellim", });
+};
+
+export { test1, passwordResetToken, passwordChange, passwordReset, register, verify, login, test, me };
