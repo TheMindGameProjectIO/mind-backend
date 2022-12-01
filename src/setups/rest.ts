@@ -40,8 +40,11 @@ const __dirname = path.dirname(__filename);
 
 app.use(
     cors({
-        origin: ["http://localhost:3000"],
-        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header)],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", ],
+        credentials: true,
+        origin: ["http://localhost:3000", '*'],
+        exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin'],
+        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin'],
     })
 );
 
