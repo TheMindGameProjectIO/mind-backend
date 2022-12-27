@@ -1,13 +1,18 @@
 import { Model, Schema, HydratedDocument, model } from "mongoose";
 import { DBCollections } from "@utils/enum";
-import { IRoom } from "@models/room.model";
+import { IInvitationLinkPayload, IRoom } from "@models/room.model";
 import env from "@/utils/env";
+import { signPayload, verifyPayload } from "@/utils/token";
 
-interface IRoomMethods {}
+interface IRoomMethods {
+}
 
-interface IRoomDocument extends IRoom, HydratedDocument<IRoom, IRoomMethods> {}
+interface IRoomDocument extends IRoom, HydratedDocument<IRoom, IRoomMethods> {
+}
 
-interface RoomModel extends Model<IRoom, {}, IRoomMethods> {}
+interface RoomModel extends Model<IRoom, {}, IRoomMethods> {
+  getRoomFromInvitationLinkPayload: (payload: string) => Promise<IRoomDocument>;
+}
 
 const roomSchema = new Schema(
   {
@@ -31,15 +36,33 @@ const roomSchema = new Schema(
     },
   },
   {
+    statics: {
+      getRoomFromInvitationLinkPayload(payload: string) {
+        try {
+          const { _id } = verifyPayload<IInvitationLinkPayload>(payload);
+          return Room.findById(_id);
+        } catch {
+          return null;
+        }
+      },
+    },
+    virtuals: {
+      invitationLink: {
+        get() {
+          return `${
+            env.APP_API_URL
+          }/game/room/join/invitation/${signPayload<IInvitationLinkPayload>(
+            { _id: this._id },
+            env.TOKEN_ROOM_INVITE_EXPIRES_IN
+          )}`;
+        },
+      },
+    },
     toJSON: {
       virtuals: true,
     },
   }
 );
-
-roomSchema.virtual("invitationLink").get(function () {
-  return `${env.APP_API_URL}/game/room/join/invitation/${this._id}`;
-});
 
 const Room: RoomModel = model<IRoom, RoomModel>(DBCollections.Room, roomSchema);
 export default Room;

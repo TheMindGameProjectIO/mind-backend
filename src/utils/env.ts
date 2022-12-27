@@ -26,6 +26,8 @@ const env = {
     TOKEN_PERMISSION_EXPIRES_IN: Number(),
     TOKEN_SOCKET_EXPIRES_IN: Number(),
     SESSION_SECRET_KEY: String(),
+    TOKEN_ROOM_INVITE_EXPIRES_IN: Number(),
+
 
     SOCKET_HOST: String(),
     SOCKET_PORT: Number(),

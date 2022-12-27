@@ -8,7 +8,13 @@ import {UserRole} from "@utils/enum";
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization');
     if (!token) res.errors.notEnoughPermissions();
-    const {_id} = jwt.verify(token, process.env.SECRET_KEY) as IAuthPayload;
+    let payload: IAuthPayload;
+    try{
+        payload = jwt.verify(token, process.env.SECRET_KEY) as IAuthPayload;
+    } catch {
+        payload = {} as IAuthPayload;
+    }
+    const {_id} = payload;
     if (!_id) res.errors.notEnoughPermissions();
     User.findById(_id, (err, user) => {
         if (!user) res.errors.notEnoughPermissions();

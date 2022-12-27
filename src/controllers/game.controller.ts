@@ -1,5 +1,6 @@
 import { IRoomCreateForm } from "@/models/room.model";
 import Room from "@/schemas/room.schema";
+import env from "@/utils/env";
 import { Request, Response } from "express";
 
 export const createRoom = async (
@@ -23,9 +24,19 @@ export const getRoom = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response
 ) => {
-  const room = await Room.findById(req.params.id, { _id: 0, __v: 0 });
+  const room = await Room.findById(req.params.id, { __v: 0 });
   if (!room) return res.status(404).send({ message: "Room not found" });
   return res.send(room);
+};
+
+export const joinRoomByInvitationLink = async (
+  req: Request<{ payload: string }, {}, {}>,
+  res: Response
+) => {
+  // TODO implement backend logic
+  const room = await Room.getRoomFromInvitationLinkPayload(req.params.payload);
+  if (!room) return res.status(404).send({ message: "Room not found" });
+  return res.redirect(`${env.APP_WEB_URL}/room/${room._id}`);
 };
 // import { Request, RequestHandler } from 'express';
 // import { IContactUsForm } from '@/models/general.model';

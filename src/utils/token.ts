@@ -20,3 +20,12 @@ export const generateSocketToken = (payload: ISocketAuthPayload) => {
 export const verifyAuthToken = (token: string) => {
     return jwt.verify(token, env.SECRET_KEY) as IAuthPayload;
 };
+
+export const signPayload = <T extends object>(payload: T, expiresIn: number) => {
+    return jwt.sign(payload, env.SECRET_KEY, { expiresIn });
+}
+
+export const verifyPayload = <T extends object>(token: string) => {
+    return jwt.verify(token, env.SECRET_KEY) as T;
+}
+

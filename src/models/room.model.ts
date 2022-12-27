@@ -3,6 +3,10 @@ export interface IRoomCreateForm {
     name: string;
 }
 
+export interface IInvitationLinkPayload {
+    _id: string;
+}
+
 export interface IRoom {
     name: string;
     maxUserCount: number;
@@ -10,3 +14,4 @@ export interface IRoom {
     expireAfter: number;
     invitationLink: string;
 }
+
