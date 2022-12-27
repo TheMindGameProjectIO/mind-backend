@@ -1,6 +1,7 @@
 import { Model, Schema, HydratedDocument, model } from "mongoose";
 import { DBCollections } from "@utils/enum";
 import { IRoom } from "@models/room.model";
+import env from "@/utils/env";
 
 interface IRoomMethods {}
 
@@ -8,25 +9,36 @@ interface IRoomDocument extends IRoom, HydratedDocument<IRoom, IRoomMethods> {}
 
 interface RoomModel extends Model<IRoom, {}, IRoomMethods> {}
 
-const roomSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
+const roomSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    authorId: {
+      type: Schema.Types.ObjectId,
+      ref: DBCollections.User,
+    },
+    expireAfter: {
+      // in seconds
+      type: Number,
+      required: true,
+      default: 600,
+    },
+    maxUserCount: {
+      type: Number,
+      required: true,
+    },
   },
-  authorId: {
-    type: Schema.Types.ObjectId,
-    ref: DBCollections.User,
-  },
-  expireAfter: {
-    // in seconds
-    type: Number,
-    required: true,
-    default: 600,
-  },
-  maxUserCount: {
-    type: Number,
-    required: true,
-  },
+  {
+    toJSON: {
+      virtuals: true,
+    },
+  }
+);
+
+roomSchema.virtual("invitationLink").get(function () {
+  return `${env.APP_API_URL}/game/room/join/invitation/${this._id}`;
 });
 
 const Room: RoomModel = model<IRoom, RoomModel>(DBCollections.Room, roomSchema);

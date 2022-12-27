@@ -1,20 +1,32 @@
-import { IRoomCreateForm } from '@/models/room.model';
-import Room from '@/schemas/room.schema';
-import { Request, Response } from 'express';
+import { IRoomCreateForm } from "@/models/room.model";
+import Room from "@/schemas/room.schema";
+import { Request, Response } from "express";
 
-
-export const createRoom = async (req: Request<{}, {}, IRoomCreateForm>, res: Response) => {
-    const {maxUserCount, name} = req.body;
-    const room = await new Room({ maxUserCount, authorId: req.user._id, name }).save();
-    room.save()
-    return res.send({message: "Room created successfully"});
+export const createRoom = async (
+  req: Request<{}, {}, IRoomCreateForm>,
+  res: Response
+) => {
+  const { maxUserCount, name } = req.body;
+  const room = await new Room({
+    maxUserCount,
+    authorId: req.user._id,
+    name,
+  }).save();
+  room.save();
+  return res.send({
+    message: "Room created successfully",
+    room: { _id: room._id },
+  });
 };
 
-export const getRoom = async (req: Request<{id: string}, {}, {}>, res: Response) => {
-    const room = await Room.findById(req.params.id, {_id: 0, __v: 0});
-    if (!room) return res.status(404).send({message: "Room not found"});
-    return res.send(room);
-}
+export const getRoom = async (
+  req: Request<{ id: string }, {}, {}>,
+  res: Response
+) => {
+  const room = await Room.findById(req.params.id, { _id: 0, __v: 0 });
+  if (!room) return res.status(404).send({ message: "Room not found" });
+  return res.send(room);
+};
 // import { Request, RequestHandler } from 'express';
 // import { IContactUsForm } from '@/models/general.model';
 // import { sendEmail } from '@queues/email.queue';

@@ -8,4 +8,5 @@ export interface IRoom {
     maxUserCount: number;
     authorId: string;
     expireAfter: number;
+    invitationLink: string;
 }
