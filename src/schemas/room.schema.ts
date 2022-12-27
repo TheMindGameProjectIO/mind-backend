@@ -2,16 +2,17 @@ import { Model, Schema, HydratedDocument, model } from "mongoose";
 import { DBCollections } from "@utils/enum";
 import { IRoom } from "@models/room.model";
 
-
 interface IRoomMethods {}
 
-interface IRoomDocument
-  extends IRoom,
-    HydratedDocument<IRoom, IRoomMethods> {}
+interface IRoomDocument extends IRoom, HydratedDocument<IRoom, IRoomMethods> {}
 
 interface RoomModel extends Model<IRoom, {}, IRoomMethods> {}
 
 const roomSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
   authorId: {
     type: Schema.Types.ObjectId,
     ref: DBCollections.User,
@@ -28,10 +29,7 @@ const roomSchema = new Schema({
   },
 });
 
-const Room: RoomModel = model<IRoom, RoomModel>(
-  DBCollections.Room,
-  roomSchema
-);
+const Room: RoomModel = model<IRoom, RoomModel>(DBCollections.Room, roomSchema);
 export default Room;
 
 // interface ITokenMethods {
