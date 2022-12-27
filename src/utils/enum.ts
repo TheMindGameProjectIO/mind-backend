@@ -9,6 +9,7 @@ export type HbsTemplate = "email_verification" | "password_reset" | "contactus_f
 enum DBCollections {
     User = "users",
     Token = "tokens",
+    Room = "rooms",
 }
 
 enum TokenType {
