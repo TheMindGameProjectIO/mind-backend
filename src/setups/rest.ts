@@ -41,7 +41,6 @@ const __dirname = path.dirname(__filename);
 app.use(
     cors({
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH", ],
-        credentials: true,
         origin: '*',
         exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin'],
         allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin'],
