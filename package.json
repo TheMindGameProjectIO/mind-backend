@@ -5,7 +5,9 @@
     "main": "src/index.ts",
     "type": "module",
     "scripts": {
+        "pm2:install": "npm i -g pm2",
         "pm2:stop": "npx pm2 stop themindgame",
+        "pm2:save": "npx pm2 save",
         "pm2:start": "npx pm2 start npm --name \"themindgame\" -- run start:digital_ocean",
         "build": "npx tsc && npx tsc-alias",
         "test": "node ./index.js",

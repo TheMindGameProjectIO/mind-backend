@@ -21,7 +21,13 @@ jobs:
               run: npm run build
             - name: Test
               run: npm run test
-            - name: Stop backend execution
+            - name: PM2 install
+              run: npm run pm2:install
+            - name: PM2 stop
               run: npm run pm2:stop
-            - name: Run backend execution
+            - name: PM2 save
+              run: npm run pm2:save
+            - name: PM2 start
               run: npm run pm2:start
+            - name: PM2 save
+              run: npm run pm2:save
