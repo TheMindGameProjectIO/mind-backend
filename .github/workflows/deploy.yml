@@ -21,5 +21,7 @@ jobs:
               run: npm run build
             - name: Test
               run: npm run test
-            - name: Reload backend execution
-              run: npx pm2 reload themindgame
+            - name: Stop backend execution
+              run: npm run pm2:stop
+            - name: Run backend execution
+              run: npm run pm2:start
