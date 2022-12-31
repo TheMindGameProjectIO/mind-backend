@@ -1,6 +1,8 @@
 import { IRoomCreateForm } from "@/models/room.model";
 import Room from "@/schemas/room.schema";
+import { Header, ISocketAuthType } from "@/utils/enum";
 import env from "@/utils/env";
+import { generateSocketToken } from "@/utils/token";
 import { Request, Response } from "express";
 
 export const createRoom = async (
@@ -29,14 +31,49 @@ export const getRoom = async (
   return res.send(room);
 };
 
+export const joinRoom = async (
+  req: Request<{ id: string }, {}, {password: string}>,
+  res: Response
+) => {
+  const room = await Room.findById(req.params.id);
+  if (!room) return res.status(404).send({ message: "Room not found" });
+
+  //TODO: check if room is full
+
+  if (room.authorId.toString() !== req.user._id.toString() && (room.hasPassword && room.password !== req.body.password)) {
+    return res.status(401).send({ message: "Wrong password" });
+  }
+
+  const token = generateSocketToken(ISocketAuthType.GAME, {
+    _id: req.user.id.toString(),
+    data: {
+      roomId: room._id.toString(),
+      role: room.getUserRole(req.user),
+    },
+  });
+
+  return res
+    .setHeader(Header.SOCKET_GAME_AUTHORATION, token)
+};
+
 export const joinRoomByInvitationLink = async (
   req: Request<{ payload: string }, {}, {}>,
   res: Response
 ) => {
   // TODO implement backend logic
+  //TODO: check if room is full
   const room = await Room.getRoomFromInvitationLinkPayload(req.params.payload);
+  const token = generateSocketToken(ISocketAuthType.GAME, {
+    _id: req.user.id.toString(),
+    data: {
+      roomId: room._id.toString(),
+      role: room.getUserRole(req.user)
+    },
+  });
   if (!room) return res.status(404).send({ message: "Room not found" });
-  return res.redirect(`${env.APP_WEB_URL}/room/${room._id}`);
+  return res
+    .setHeader(Header.SOCKET_GAME_AUTHORATION, token)
+    .redirect(`${env.APP_WEB_URL}/room/${room._id}`);
 };
 // import { Request, RequestHandler } from 'express';
 // import { IContactUsForm } from '@/models/general.model';

@@ -19,6 +19,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@socket.io/redis-adapter": "^8.0.0",
         "bull": "^4.10.1",
         "compression": "^1.7.4",
         "connect-redis": "^6.1.3",

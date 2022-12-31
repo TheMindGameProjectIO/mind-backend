@@ -27,6 +27,7 @@ const env = {
     TOKEN_SOCKET_EXPIRES_IN: Number(),
     SESSION_SECRET_KEY: String(),
     TOKEN_ROOM_INVITE_EXPIRES_IN: Number(),
+    REDIS_DB_LOCAL_URL: String(),
 
 
     SOCKET_HOST: String(),

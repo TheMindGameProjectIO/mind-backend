@@ -13,13 +13,20 @@ enum DBCollections {
 }
 
 enum TokenType {
-    EmailVerification = 0,
-    PasswordReset = 1,
+    EMAIL_VERIFICATION = 0,
+    RESET_PASSWORD = 1,
+}
+
+export enum ISocketAuthType {
+    RESET_PASSWORD = 'reset-password',
+    VERIFY_EMAIL = 'verify-email',
+    GAME = 'game',
 }
 
 enum Header {
     Authorization = "Authorization",
     SocketAuthorization = "Socket-Authorization",
+    SOCKET_GAME_AUTHORATION = "Socket-Game-Authorization",
 }
 
 const getKeysFromEnum = (enumObject: any) => {

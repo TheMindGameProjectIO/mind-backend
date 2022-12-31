@@ -8,10 +8,13 @@ export interface IInvitationLinkPayload {
 }
 
 export interface IRoom {
+    _id: string;
+    password: string;
     name: string;
     maxUserCount: number;
     authorId: string;
     expireAfter: number;
     invitationLink: string;
+    hasPassword: boolean;
 }
 

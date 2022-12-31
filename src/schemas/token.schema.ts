@@ -65,7 +65,7 @@ const tokenSchema = new Schema<IToken, TokenModel, ITokenMethods>(
             async findByIdWithUser(token: string): Promise<ITokenDocument & { user: IUserDocument }> {
                 return Token.findOne({
                     value: token,
-                    type: TokenType.EmailVerification,
+                    type: TokenType.EMAIL_VERIFICATION,
                     expiresAt: { $gt: getCurrentDate() },
                 }).populate("user");
             },
@@ -83,13 +83,13 @@ tokenSchema.virtual("user", {
 tokenSchema.post("save", async function (doc, next) {
     const user = await User.findById(doc.userId).session(doc.$session());
 
-    if (doc.type === TokenType.EmailVerification) {
+    if (doc.type === TokenType.EMAIL_VERIFICATION) {
         const html = await render('email_verification', {
             verification_link: `${env.APP_API_URL}/auth/verify/${doc.value}`,
             web_url: env.APP_WEB_URL,
         });
         await sendEmail({ email: user.email, html, subject: "Email Verification" });
-    } else if (doc.type === TokenType.PasswordReset) {
+    } else if (doc.type === TokenType.RESET_PASSWORD) {
         const html = await render("password_reset", {
             reset_link: `${env.APP_WEB_URL}/auth/password/reset/${doc.value}`,
         });

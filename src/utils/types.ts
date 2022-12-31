@@ -1,5 +1,1 @@
-type Permission = 'auth:password:reset'
-
-export {
-    Permission,
-}
+export type UserRoomRole = "host" | "guest";
