@@ -34,6 +34,6 @@ jobs:
             # - name: PM2 start
             #   run: npm run pm2:start
             - name: PM2 reload
-              run: npx pm2 reload themindgame
+              run: pm2 reload themindgame
             - name: PM2 save
               run: npm run pm2:save
