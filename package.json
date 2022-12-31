@@ -10,7 +10,7 @@
         "pm2:save": "npx pm2 save",
         "pm2:start": "npx pm2 start npm --name \"themindgame\" -- run start:digital_ocean",
         "build": "npx tsc && npx tsc-alias",
-        "test": "node ./index.js",
+        "test": "node ./index.js && echo \"Tests passed!\"",
         "start:digital_ocean": "NODE_ENV=production ENV_PATH=/home/cicd/apps/mind-backend/.env.prod node --es-module-specifier-resolution=node dist/index.js",
         "prod": "node --es-module-specifier-resolution=node dist/index.js",
         "dev": "NODE_ENV=development ENV_PATH=.env.dev nodemon -e ts --exec \"npm run build && node --es-module-specifier-resolution=node dist/index.js\" --ignore dist"
