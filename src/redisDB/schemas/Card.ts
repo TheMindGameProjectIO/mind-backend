@@ -1,10 +1,29 @@
-import client from "../setup";
 import { Entity, Schema } from "redis-om";
+import client from "../setup";
 
-export default class Card extends Entity {
+interface Card {
     gameId: string;
     playerId: string;
     value: number;
+}
+
+class Card extends Entity {
+    static async create({
+        gameId,
+        playerId,
+        value,
+    }: {
+        gameId: string;
+        playerId: string;
+        value: number;
+    }) {
+        const cardEntity = await cardRepository.createAndSave({
+            gameId,
+            playerId,
+            value,
+        });
+        return cardEntity;
+    }
 }
 
 const schema = new Schema(Card, {
@@ -13,7 +32,6 @@ const schema = new Schema(Card, {
     value: { type: "number" },
 });
 
-const cardRepository = client.fetchRepository(schema);
+export const cardRepository = client.fetchRepository(schema);
 await cardRepository.createIndex();
-
-export { cardRepository };
+export default Card;

@@ -1,9 +1,15 @@
-import client from "../setup";
 import { Entity, Schema } from "redis-om";
 import { playerRepository } from "./Player";
 import { cardRepository } from "./Card";
+import client from "../setup";
 
-export default class Game extends Entity {
+interface Game {
+    totalMistakes: number;
+    currentLevel: number;
+    roomId: string;
+}
+
+class Game extends Entity {
     public totalMistakes: number = 0;
     public currentLevel: number = 0;
     public roomId: string;
@@ -66,5 +72,5 @@ const schema = new Schema(Game, {
 
 const gameRepository = client.fetchRepository(schema);
 await gameRepository.createIndex();
-
 export { gameRepository };
+export default Game;

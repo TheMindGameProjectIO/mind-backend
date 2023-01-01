@@ -1,4 +1,4 @@
-enum UserRole {
+export enum UserRole {
     Guest = 0,
     User = 1,
     Admin = 2,
@@ -38,4 +38,4 @@ const getValuesFromEnum = (enumObject: any) => {
         .map((key) => enumObject[key]);
 };
 
-export { getKeysFromEnum, getValuesFromEnum, Header, UserRole, TokenType, DBCollections };
+export { getKeysFromEnum, getValuesFromEnum, Header, TokenType, DBCollections };

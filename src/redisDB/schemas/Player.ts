@@ -1,11 +1,14 @@
-import client from "../setup";
 import { Entity, Schema } from "redis-om";
 import { cardRepository } from "./Card";
+import client from "../setup";
 
-export default class User extends Entity {
+interface User {
     userId: string;
     gameId: string;
     isConnected: boolean;
+}
+
+class User extends Entity {
     get cards() {
         return cardRepository
             .search()
@@ -49,3 +52,4 @@ const playerRepository = client.fetchRepository(schema);
 await playerRepository.createIndex();
 
 export { playerRepository };
+export default User;

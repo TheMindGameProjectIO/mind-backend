@@ -1,0 +1,49 @@
+#  write docker-compose.yml file to run redis-stack and nodejs app\
+version: "3"
+services:
+  node:
+    image: "node:18.12.1-alpine"
+    volumes:
+      - .:/Users/user/core/main/mixed/mixed/projects/themindgame
+    working_dir: /Users/user/core/main/mixed/mixed/projects/themindgame
+    command: "npm run dev"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis-stack
+  redis-stack:
+    image: "redis/redis-stack-server:latest"
+    ports:
+      - "6379:6379"
+# use redis-stack
+
+
+
+
+# version: "3"
+# services:
+#   node:
+#     image: "node:18.12.1-alpine"
+#     volumes:
+#       - .:/Users/user/core/main/mixed/mixed/projects/themindgame
+#     working_dir: /Users/user/core/main/mixed/mixed/projects/themindgame
+#     command: "npm run dev"
+#     ports:
+#       - "3000:8000"
+#     depends_on:
+#       - redissearch
+#       - rejson
+#       - redis
+#   redis:
+#     image: "redis:5"
+#     ports:
+#       - "6379:6379"
+#   redissearch:
+#     image: "redislabs/redisearch:latest"
+#     depends_on:
+#       - redis
+    
+#   rejson:
+#     image: "redislabs/rejson:latest"
+#     depends_on:
+#       - redis
