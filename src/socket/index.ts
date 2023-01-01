@@ -6,8 +6,18 @@ import { EventParams } from "socket.io/dist/typed-events";
 const socketHandler = {
     io,
 
+    userAlreadyExist: (user: IUser) => {
+        return io.sockets.adapter.rooms.has(user._id.toString());
+    },
+
     save: (socket: ISocket) => {
         socket.join(socket.data.user?._id.toString() as string);
+    },
+
+    delete: (socket: ISocket, message: string = "You were disconnected") => {
+        socket.leave(socket.data.user?._id.toString() as string);
+        socket.emit("response", "connection", message);
+        socket.disconnect();
     },
 
     emitEventToUser: <Ev extends keyof ServerToClientEvents>(

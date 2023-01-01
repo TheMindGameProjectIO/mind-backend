@@ -3,8 +3,7 @@ import { ISocketAuthType } from "@/utils/enum";
 import { Socket } from "socket.io";
 
 export class SocketData<T = any> {
-  constructor(public user: IUser | { _id: string }, public type: ISocketAuthType, public data?: T) {
-    this.user = user;
+  constructor(public user: Omit<IUser, '_id'> & {_id: string} | { _id: string }, public type: ISocketAuthType, public data?: T) {
     this.data = data;
     this.type = type;
   }

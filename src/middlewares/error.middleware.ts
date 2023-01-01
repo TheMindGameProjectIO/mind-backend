@@ -21,8 +21,11 @@ const injectErrorDBHandlerToResponse = (request: Request, response: Response, ne
 
 const injectDefaultErrors = (request: Request, response: Response, next: NextFunction) => {
     response.errors = {
-        notEnoughPermissions: (message) => {
+        notAuthorized: (message) => {
             response.status(401).send({error: message || "You are not authorized to access this resource"})
+        },
+        notEnoughPermissions: (message) => {
+            response.status(401).send({error: message || "You don't have enough permissions to access this resource"})
         },
     }
     next()

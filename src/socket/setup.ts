@@ -17,7 +17,8 @@ import { verifySocketToken } from "@/utils/token";
 import gameHandler from "./src/handlers/game.handler";
 import { ISocketAuthType } from "@/utils/enum";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { connection as pubClient } from "@setups/redis";
+import { connection as pubClient } from "@/redisDB/setup";
+import { IUser } from "@/models/user.model";
 
 const subClient = pubClient.duplicate();
 const server = http.createServer(app);
@@ -37,7 +38,7 @@ const io = new Server<
   SocketData
 >(server, {
   cors: {
-    origin: ["*"],
+    // origin: [],
   },
 });
 io.adapter(createAdapter(pubClient, subClient));
@@ -69,11 +70,13 @@ io.use(async (socket, next) => {
      * if yes, then socket connection will be processed as authenticated
      */
     const userEntity = await User.findById(_id);
-    socket.data = new SocketData(userEntity || { _id }, type, data);
+    socket.data = new SocketData(userEntity?.toJSON?.() || { _id }, type, data);
   } catch (e) {
     next(new Error("Authentication error"));
   }
 }).on("connection", (socket: ISocket) => {
+  io.sockets.adapter.rooms
+  console.log("socket connected");
   socketHandler.save(socket);
   console.log("a user connected");
 

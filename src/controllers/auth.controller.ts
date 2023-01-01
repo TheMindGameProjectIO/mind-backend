@@ -27,7 +27,7 @@ const register = async (req: Request, res: Response) => {
         await userEntity.save({ session });
         await Token.createFromUser(userEntity, TokenType.EMAIL_VERIFICATION);
         const token = userEntity.generateAuthToken();
-        res.setHeader(Header.Authorization, token).send(userEntity);
+        res.setHeader(Header.AUTHORIZATION, token).send(userEntity);
         await session.commitTransaction();
     } catch (err) {
         await session.abortTransaction();
@@ -45,7 +45,7 @@ const login = async (req: Request<{}, {}, IUserLogin>, res: Response) => {
     if (!userEntity.checkPassword(password)) return res.status(400).send({ error: "Invalid email or password" });
 
     const token = userEntity.generateAuthToken();
-    return res.setHeader(Header.Authorization, token).send(userEntity);
+    return res.setHeader(Header.AUTHORIZATION, token).send(userEntity);
 };
 
 const me = async (req: Request, res: Response) => {
@@ -69,7 +69,7 @@ const passwordResetToken = async (req: Request<{}, {}, { email: string }>, res: 
     await Token.deleteOne({ userId: userEntity._id, type: TokenType.RESET_PASSWORD });
     await Token.createFromUser(userEntity, TokenType.RESET_PASSWORD);
     const token = generateSocketToken(ISocketAuthType.RESET_PASSWORD, { _id: req.session.id, data: null });
-    res.setHeader(Header.SocketAuthorization, token).send({ message: "Password reset token sent on your email" });
+    res.setHeader(Header.SOCKET_AUTHORIZATION, token).send({ message: "Password reset token sent on your email" });
 };
 
 export const passwordResetVerify = async (req: Request<{ token: string }>, res: Response) => {

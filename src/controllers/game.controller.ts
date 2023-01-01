@@ -15,10 +15,13 @@ export const createRoom = async (
     authorId: req.user._id,
     name,
   }).save();
-  room.save();
   return res.send({
     message: "Room created successfully",
-    room: { _id: room._id },
+    room: { 
+      _id: room._id, 
+      players: [
+        req.user,
+    ] },
   });
 };
 
@@ -26,7 +29,7 @@ export const getRoom = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response
 ) => {
-  const room = await Room.findById(req.params.id, { __v: 0 });
+  const room = await Room.findById(req.params.id, { __v: 0 }).catch(() => null);
   if (!room) return res.status(404).send({ message: "Room not found" });
   return res.send(room);
 };
@@ -35,7 +38,7 @@ export const joinRoom = async (
   req: Request<{ id: string }, {}, {password: string}>,
   res: Response
 ) => {
-  const room = await Room.findById(req.params.id);
+  const room = await Room.findById(req.params.id).catch(() => null);
   if (!room) return res.status(404).send({ message: "Room not found" });
 
   //TODO: check if room is full
@@ -53,7 +56,7 @@ export const joinRoom = async (
   });
 
   return res
-    .setHeader(Header.SOCKET_GAME_AUTHORATION, token)
+    .setHeader(Header.SOCKET_GAME_AUTHORIZATION, token).end();
 };
 
 export const joinRoomByInvitationLink = async (
@@ -72,7 +75,7 @@ export const joinRoomByInvitationLink = async (
   });
   if (!room) return res.status(404).send({ message: "Room not found" });
   return res
-    .setHeader(Header.SOCKET_GAME_AUTHORATION, token)
+    .setHeader(Header.SOCKET_GAME_AUTHORIZATION, token)
     .redirect(`${env.APP_WEB_URL}/room/${room._id}`);
 };
 // import { Request, RequestHandler } from 'express';

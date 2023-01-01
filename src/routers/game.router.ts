@@ -8,6 +8,6 @@ import { UserRole } from "@/utils/enum";
 export const router = Router();
 
 router.post("/room/create", authenticate, role(UserRole.User), validate(RoomCreate), createRoom);
-router.get("/room/:id", getRoom);
-router.get("/room/join/invitation/:payload", joinRoomByInvitationLink);
-router.get("/room/join/:id", joinRoom);
+router.get("/room/:id", authenticate, role(UserRole.User), getRoom);
+router.get("/room/join/invitation/:payload", authenticate, role(UserRole.User), joinRoomByInvitationLink);
+router.post("/room/join/:id", authenticate, role(UserRole.User), joinRoom);

@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 import hbs from "@setups/view";
 import env from "@/utils/env";
 import connectRedis from 'connect-redis';
-import { connection } from "./redis";
+import { connection } from "@/redisDB/setup";
 import { getValuesFromEnum, Header } from "@/utils/enum";
 
 const RedisStore = connectRedis(session);
@@ -51,12 +51,12 @@ app.use(
 app.use(express.json());
 app.use(injectErrorDBHandlerToResponse);
 app.use(injectDefaultErrors);
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    next();
-})
+// app.use((req, res, next) => {
+//     res.setHeader("Access-Control-Allow-Origin", "*");
+//     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
+//     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//     next();
+// })
 
 // TEMPLATE ENGINE
 app.engine("handlebars", hbs.engine);
