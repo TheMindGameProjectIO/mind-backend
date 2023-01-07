@@ -43,8 +43,8 @@ app.use(
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH", ],
         credentials: true,
         origin: '*',
-        exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'Access-Control-Allow-Origin'],
-        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
+        exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
+        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
     })
 );
 

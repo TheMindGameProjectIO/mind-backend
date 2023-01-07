@@ -10,9 +10,6 @@ interface Game {
 }
 
 class Game extends Entity {
-    public totalMistakes: number = 0;
-    public currentLevel: number = 0;
-    public roomId: string;
     public static LAST_LEVEL_NUMBER: number = 0;
     get hasGameStarted() {
         return this.currentLevel > 0;
@@ -40,11 +37,17 @@ class Game extends Entity {
     }
 
     static findByRoomId(roomId: string) {
-        return gameRepository.search().where("roomId").eq(roomId).first();
+        return gameRepository.search().where("roomId").equals(roomId).first();
     }
 
     findPlayerByUserId(userId: string) {
-        return playerRepository.search().where("userId").eq(userId).where('gameId').eq(this.entityId).first();
+        return playerRepository
+            .search()
+            .where("userId")
+            .equals(userId)
+            .where("gameId")
+            .equals(this.entityId)
+            .first();
     }
 
     static async gameExists(roomId: string) {
@@ -55,20 +58,26 @@ class Game extends Entity {
     }
 
     static async create({ roomId }: { roomId: string }) {
-        const gameEntity = gameRepository.createEntity();
-        gameEntity.roomId = roomId;
-        gameEntity.currentLevel = 0;
-        gameEntity.totalMistakes = 0;
-        await gameRepository.save(gameEntity);
+        const gameEntity = await gameRepository.createAndSave({
+            roomId,
+            currentLevel: 0,
+            totalMistakes: 0,
+        });
         return gameEntity;
     }
 }
 
-const schema = new Schema(Game, {
-    totalMistakes: { type: "number" },
-    currentLevel: { type: "number" },
-    roomId: { type: "string" },
-});
+const schema = new Schema(
+    Game,
+    {
+        totalMistakes: { type: "number" },
+        currentLevel: { type: "number" },
+        roomId: { type: "string" },
+    },
+    {
+        dataStructure: "JSON",
+    }
+);
 
 const gameRepository = client.fetchRepository(schema);
 await gameRepository.createIndex();

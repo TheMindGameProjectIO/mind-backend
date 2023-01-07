@@ -22,6 +22,16 @@ class User extends Entity {
         await playerRepository.save(this);
     }
 
+    async disconnect() {
+        this.isConnected = false;
+        await playerRepository.save(this);
+    }
+
+    async connect() {
+        this.isConnected = true;
+        await playerRepository.save(this);
+    }
+
     static async create({
         userId,
         gameId,
@@ -32,7 +42,7 @@ class User extends Entity {
         const userEntity = playerRepository.createEntity();
         userEntity.userId = userId;
         userEntity.gameId = gameId;
-        userEntity.isConnected = true;
+        userEntity.isConnected = false;
         await playerRepository.save(userEntity);
         return userEntity;
     }
