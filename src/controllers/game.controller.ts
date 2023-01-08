@@ -1,83 +1,134 @@
 import { IRoomCreateForm } from "@/models/room.model";
-import Room from "@/schemas/room.schema";
+import Game from "@redisDB/schemas/Game";
+import Room, { IRoomDocument } from "@schemas/room.schema";
+import socketHandler from "@/socket";
 import { Header, ISocketAuthType } from "@/utils/enum";
-import env from "@/utils/env";
-import { generateSocketToken } from "@/utils/token";
+import env from "@utils/env";
+import { generateSocketToken } from "@utils/token";
 import { Request, Response } from "express";
+import lodash from "lodash";
 
 export const createRoom = async (
-  req: Request<{}, {}, IRoomCreateForm>,
-  res: Response
+    req: Request<{}, {}, IRoomCreateForm>,
+    res: Response
 ) => {
-  const { maxUserCount, name } = req.body;
-  const room = await new Room({
-    maxUserCount,
-    authorId: req.user._id,
-    name,
-  }).save();
-  return res.send({
-    message: "Room created successfully",
-    room: { 
-      _id: room._id, 
-      players: [
-        req.user,
-    ] },
-  });
+    const { maxUserCount, name } = req.body;
+    const room = await new Room({
+        maxUserCount,
+        authorId: req.user._id,
+        name,
+    }).save();
+    return res.send({
+        message: "Room created successfully",
+        room: {
+            _id: room._id,
+            players: [],
+        },
+    });
 };
 
 export const getRoom = async (
-  req: Request<{ id: string }, {}, {}>,
-  res: Response
+    req: Request<{ id: string }, {}, {}>,
+    res: Response
 ) => {
-  const room = await Room.findById(req.params.id, { __v: 0 }).catch(() => null);
-  if (!room) return res.status(404).send({ message: "Room not found" });
-  return res.send(room);
+    const room = await Room.findById(req.params.id, { __v: 0 }).catch(
+        () => null
+    );
+    if (!room) return res.status(404).send({ message: "Room not found" });
+    const players = await Game.findPlayersByRoomId(room._id.toString());
+    return res.send({
+        ...room.toJSON(),
+        users: await Promise.all(players.filter((player) => player.isConnected).map(async (player) => {
+          return lodash.pick(await player.user, ['_id', 'nickname']);
+        })),
+    });
 };
 
 export const joinRoom = async (
-  req: Request<{ id: string }, {}, {password: string}>,
-  res: Response
+    req: Request<{ id: string }, {}, { password: string }>,
+    res: Response
 ) => {
-  const room = await Room.findById(req.params.id).catch(() => null);
-  if (!room) return res.status(404).send({ message: "Room not found" });
+    const room = await Room.findById(req.params.id).catch(() => null);
+    if (!room) return res.status(404).send({ message: "Room not found" });
 
-  //TODO: check if room is full
+    //TODO: check if room is full
 
-  if (room.authorId.toString() !== req.user._id.toString() && (room.hasPassword && room.password !== req.body.password)) {
-    return res.status(401).send({ message: "Wrong password" });
-  }
+    if (
+        room.authorId.toString() !== req.user._id.toString() &&
+        room.hasPassword &&
+        room.password !== req.body.password
+    ) {
+        return res.status(401).send({ message: "Wrong password" });
+    }
 
-  const token = generateSocketToken(ISocketAuthType.GAME, {
-    _id: req.user.id.toString(),
-    data: {
-      roomId: room._id.toString(),
-      role: room.getUserRole(req.user),
-    },
-  });
+    const token = generateSocketToken(ISocketAuthType.GAME, {
+        _id: req.user.id.toString(),
+        data: {
+            roomId: room._id.toString(),
+            role: room.getUserRole(req.user),
+        },
+    });
 
-  return res
-    .setHeader(Header.SOCKET_GAME_AUTHORIZATION, token).end();
+    return res.setHeader(Header.SOCKET_GAME_AUTHORIZATION, token).end();
 };
 
 export const joinRoomByInvitationLink = async (
-  req: Request<{ payload: string }, {}, {}>,
-  res: Response
+    req: Request<{ payload: string }, {}, {}>,
+    res: Response
 ) => {
-  // TODO implement backend logic
-  //TODO: check if room is full
-  const room = await Room.getRoomFromInvitationLinkPayload(req.params.payload);
-  const token = generateSocketToken(ISocketAuthType.GAME, {
-    _id: req.user.id.toString(),
-    data: {
-      roomId: room._id.toString(),
-      role: room.getUserRole(req.user)
-    },
-  });
-  if (!room) return res.status(404).send({ message: "Room not found" });
-  return res
-    .setHeader(Header.SOCKET_GAME_AUTHORIZATION, token)
-    .redirect(`${env.APP_WEB_URL}/room/${room._id}`);
+    // TODO implement backend logic
+    //TODO: check if room is full
+    const room = await Room.getRoomFromInvitationLinkPayload(
+        req.params.payload
+    );
+    const token = generateSocketToken(ISocketAuthType.GAME, {
+        _id: req.user.id.toString(),
+        data: {
+            roomId: room._id.toString(),
+            role: room.getUserRole(req.user),
+        },
+    });
+    if (!room) return res.status(404).send({ message: "Room not found" });
+    return res
+        .setHeader(Header.SOCKET_GAME_AUTHORIZATION, token)
+        .redirect(`${env.APP_WEB_URL}/room/${room._id}`);
 };
+
+export const gameStart = async (req: Request<{ id: string }, {}, { }>, res) => {
+    const room: IRoomDocument = await Room.findById(req.params.id).catch(() => null);
+    if (!room) return res.status(404).send({ message: "Room not found" });
+    if (room.authorId.toString() !== req.user._id.toString()) return res.status(401).send({ message: "You are not the author of this room" });
+    const game = await Game.findByRoomId(room._id.toString());
+    if (!game) return res.status(404).send({ message: "Game not found" });
+    if (game.hasStarted) return res.status(400).send({ message: "Game already started" });
+    await game.start();
+    socketHandler.emitTo(room._id.toString(), 'game:started');
+    return res.send({ message: "Game started successfully", game: game.toJSON() });
+} 
+
+export const getInHandCardsByRoom = async (req: Request<{ id: string }, {}, { }>, res) => {
+    const player = await Game.findPlayerByRoomIdAndUserId(req.params.id, req.user._id.toString());
+    if (!player) return res.status(404).send({ message: "Player not found" });
+    return res.send({ cards: player.cards });
+}
+
+export const getInGameCardsByRoom = async (req: Request<{ id: string }, {}, { }>, res) => {
+    const game = await Game.findByRoomId(req.params.id);
+    if (!game) return res.status(404).send({ message: "Game not found" });
+    return res.send({ cards: game.cards });
+}
+
+export const getInHandCardsByGame = async (req: Request<{ id: string }, {}, { }>, res) => {
+    const player = await Game.findPlayerByGameIdAndUserId(req.params.id, req.user._id.toString());
+    if (!player) return res.status(404).send({ message: "Player not found" });
+    return res.send({ cards: player.cards });
+}
+
+export const getInGameCardsByGame = async (req: Request<{ id: string }, {}, { }>, res) => {
+    const game = await Game.findById(req.params.id);
+    if (!game) return res.status(404).send({ message: "Game not found" });
+    return res.send({ cards: game.cards });
+}
 // import { Request, RequestHandler } from 'express';
 // import { IContactUsForm } from '@/models/general.model';
 // import { sendEmail } from '@queues/email.queue';

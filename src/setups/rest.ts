@@ -22,7 +22,7 @@ var sess: SessionOptions = {
     secret: env.SESSION_SECRET_KEY,
     resave: false,
     saveUninitialized: true,
-    store: new RedisStore({ client: connection }),
+    // store: new RedisStore({ client: connection }),
     cookie: {
         secure: false,
     },

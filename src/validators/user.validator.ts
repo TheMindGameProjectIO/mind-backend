@@ -6,7 +6,6 @@ const UserPassword = Joi.string().min(6).required();
 const UserRegister = Joi.object({
     email: UserEmail,
     password: UserPassword,
-    confirmPassword: Joi.any().valid(Joi.ref('password')).required(),
     nickname: Joi.string().min(3).required(),
 });
 

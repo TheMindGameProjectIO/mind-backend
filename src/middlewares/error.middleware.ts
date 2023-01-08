@@ -8,7 +8,7 @@ const errorHandler = (error, request: Request, response: Response) => {
 
 const injectErrorDBHandlerToResponse = (request: Request, response: Response, next: NextFunction) => {
     response.handleDBError = (error) => {
-        let message: string = JSON.stringify(error), status_code: number = 500;
+        let message: string = error, status_code: number = 500;
         if (error.code === 11000) {
             const errors = Object.keys(error.keyValue);
             message = `${errors} already exist${errors.length > 1 ? 's' : ''}`;

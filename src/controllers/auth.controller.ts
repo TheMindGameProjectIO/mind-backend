@@ -3,7 +3,7 @@ import { IUserRegister, IUserLogin } from "@models/user.model";
 import User from "@schemas/user.schema";
 import { startSession } from "mongoose";
 import Token from "@schemas/token.schema";
-import { Header, ISocketAuthType, TokenType } from "@utils/enum";
+import { Header, ISocketAuthType, TokenType, UserRole } from "@utils/enum";
 import { getCurrentDate } from "@utils/datetime";
 import { generateSocketToken } from "@/utils/token";
 import socketHandler from "@/socket";

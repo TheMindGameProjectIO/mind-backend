@@ -1,20 +1,20 @@
+import User from "@schemas/user.schema";
 import { Entity, Schema } from "redis-om";
-import { cardRepository } from "./Card";
+// import { cardRepository } from "./Card";
 import client from "../setup";
+import { gameRepository } from "./Game";
 
-interface User {
+interface Player {
     userId: string;
     gameId: string;
     isConnected: boolean;
+    // cards: number[];
+    cards: string[];
 }
 
-class User extends Entity {
-    get cards() {
-        return cardRepository
-            .search()
-            .where("playerId")
-            .eq(this.entityId)
-            .all();
+class Player extends Entity {
+    get user() {
+        return User.findById(this.userId);
     }
 
     async set({ isConnected }: { isConnected: boolean }) {
@@ -23,27 +23,42 @@ class User extends Entity {
     }
 
     async disconnect() {
+        //TODO: start counter to remove player from game after a certain time if he doesn't reconnect
         this.isConnected = false;
         await playerRepository.save(this);
     }
 
     async connect() {
+        //TODO: reset counter if player reconnects
         this.isConnected = true;
         await playerRepository.save(this);
+    }
+
+    async removeCard(card: string) {
+        this.cards = this.cards.filter((cardId) => cardId !== card);
+        await playerRepository.save(this);
+    }
+
+    async hasCard(card: string) {
+        return this.cards.includes(card);
+    }
+
+    async playCard(card: string) {
+        const game = await gameRepository.search().where("entityId").eq(this.gameId).first();
+        await game.addCard(card);
+        await this.removeCard(card);
     }
 
     static async create({
         userId,
         gameId,
-    }: {
-        userId: string;
-        gameId: string;
-    }) {
-        const userEntity = playerRepository.createEntity();
-        userEntity.userId = userId;
-        userEntity.gameId = gameId;
-        userEntity.isConnected = false;
-        await playerRepository.save(userEntity);
+    }: Pick<Player, 'userId' | 'gameId'>) {
+        const userEntity = await playerRepository.createAndSave({
+            userId,
+            gameId,
+            isConnected: false,
+            cards: [],
+        });
         return userEntity;
     }
 
@@ -52,14 +67,15 @@ class User extends Entity {
     }
 }
 
-const schema = new Schema(User, {
+const schema = new Schema(Player, {
     userId: { type: "string" },
     gameId: { type: "string" },
-    _isConnected: { type: "boolean" },
+    isConnected: { type: "boolean" },
+    cards: { type: "string[]" },
 });
 
 const playerRepository = client.fetchRepository(schema);
 await playerRepository.createIndex();
 
 export { playerRepository };
-export default User;
+export default Player;

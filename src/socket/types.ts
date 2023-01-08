@@ -3,6 +3,7 @@ import { ISocketAuthType } from "@/utils/enum";
 import { IUser } from "@models/user.model";
 import { Socket } from "socket.io";
 import { SocketData } from "./classes";
+import Player from "@redisDB/schemas/Player";
 
 export interface ServerToClientEvents {
   "auth:verified:email": () => void;
@@ -12,7 +13,11 @@ export interface ServerToClientEvents {
   "game:self:joined": () => void;
   "game:created": () => void;
   message: (message: string) => void;
-  response: (event: keyof ClientToServerEvents, response: string) => void;
+  response: (event: keyof ClientToServerEvents, response: {message: string, status: "success" | "fail"}) => void;
+  "game:player:joined": () => void;
+  "game:player:left": () => void;
+  "game:self:left": () => void;
+  "game:started": () => void;
 }
 
 export interface ClientToServerEvents {
@@ -20,6 +25,7 @@ export interface ClientToServerEvents {
   pong: () => void;
   "game:start": () => void;
   "connection": () => void;
+  "game:player:joined": () => void;
 }
 
 export interface InterServerEvents {}

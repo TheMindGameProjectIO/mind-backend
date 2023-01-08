@@ -92,7 +92,7 @@ io.use(async (socket, next) => {
   } catch (e) {
     next(new Error("Authentication error"));
   }
-}).on("connection", (socket: ISocket) => {
+}).on("connection", async (socket: ISocket) => {
 
   socketHandler.save(socket);
 
@@ -106,7 +106,7 @@ io.use(async (socket, next) => {
   });
 
   socket.data.type === ISocketAuthType.GAME &&
-    gameHandler(socket as IGameSocket);
+    await gameHandler(socket as IGameSocket);
 });
 
 io.listen(env.SOCKET_PORT);

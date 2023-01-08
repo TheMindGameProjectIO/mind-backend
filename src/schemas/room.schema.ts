@@ -10,7 +10,7 @@ interface IRoomMethods {
   getUserRole(user: IUser): UserRoomRole;
 }
 
-interface IRoomDocument extends IRoom, HydratedDocument<IRoom, IRoomMethods> {
+export interface IRoomDocument extends IRoom, HydratedDocument<IRoom, IRoomMethods> {
 }
 
 interface RoomModel extends Model<IRoom, {}, IRoomMethods> {

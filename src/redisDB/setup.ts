@@ -10,5 +10,6 @@ await connection.connect();
 
 const client = await new Client().use(connection).catch();
 
+client.execute(["FLUSHALL"]);
 export default client;
 export { connection };
