@@ -10,6 +10,7 @@ interface Player {
     isConnected: boolean;
     // cards: number[];
     cards: string[];
+    userNickname: string;
 }
 
 class Player extends Entity {
@@ -52,12 +53,14 @@ class Player extends Entity {
     static async create({
         userId,
         gameId,
-    }: Pick<Player, 'userId' | 'gameId'>) {
+        userNickname,
+    }: Pick<Player, 'userId' | 'gameId' | 'userNickname'>) {
         const userEntity = await playerRepository.createAndSave({
             userId,
             gameId,
             isConnected: false,
             cards: [],
+            userNickname,
         });
         return userEntity;
     }
@@ -72,6 +75,7 @@ const schema = new Schema(Player, {
     gameId: { type: "string" },
     isConnected: { type: "boolean" },
     cards: { type: "string[]" },
+    userNickname: { type: "string" },
 });
 
 const playerRepository = client.fetchRepository(schema);

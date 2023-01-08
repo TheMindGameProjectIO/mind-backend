@@ -9,7 +9,7 @@ import {
   ISocket,
   ServerToClientEvents,
 } from "@/socket/types";
-import User from "@schemas/user.schema";
+import User, { IUserDocument } from "@schemas/user.schema";
 import { getCurrentDate } from "@utils/datetime";
 import socketHandler from "@socket/index";
 import { SocketData } from "./classes";
@@ -80,14 +80,14 @@ io.use(async (socket, next) => {
      *
      * if yes, then socket connection will be processed as authenticated
      */
-    let userEntity: IUser = await User.findById(_id);
+    let userEntity: IUserDocument = await User.findById(_id);
     if (!userEntity) {
-      userEntity = { _id} as IUser
+      userEntity = { _id} as IUserDocument
       logger.warn(`socket connection ${socket.id} is processed as anonymous`);
     } else {
-      logger.info(`socket connection ${socket.id} is processed as authenticated`);
+      logger.info(`socket connection ${socket.id} is processed as authenticated with nickname:${userEntity.nickname}`);
     }
-    socket.data = new SocketData(userEntity, type, data);
+    socket.data = new SocketData(userEntity as IUser, type, data);
     next();
   } catch (e) {
     next(new Error("Authentication error"));

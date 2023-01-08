@@ -10,7 +10,7 @@ const apiRouter = Router();
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/general', generalRouter);
-apiRouter.use('/game', gameRouter);
+apiRouter.use('/room', gameRouter);
 apiRouter.use('/redis', redisRouter);
 
 app.use("/api", apiRouter);

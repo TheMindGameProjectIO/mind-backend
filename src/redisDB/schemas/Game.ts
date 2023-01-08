@@ -6,7 +6,7 @@ import client from "../setup";
 
 interface Game {
     totalMistakes: number;
-    _currentLevel: number;
+    currentLevel: number;
     roomId: string;
     cards: string[];
     shootingStars: number;
@@ -16,17 +16,6 @@ class Game extends Entity {
     public static LAST_LEVEL_NUMBER: number = 0;
     get hasStarted() {
         return this.currentLevel > 0;
-    }
-
-    get currentLevel() {
-        return this._currentLevel;
-    }
-
-    set currentLevel(level: number) {
-        if (level > this._currentLevel) {
-            this.shootingStars++;
-        }
-        this._currentLevel = level;
     }
 
     get playersCount() {
@@ -57,6 +46,7 @@ class Game extends Entity {
 
     async startLevel() {
         this.cards = [];
+        this.shootingStars++;
         const players = await playerRepository.search().where("gameId").eq(this.entityId).all();
         const array = lodash.range(1, 101).map((number) => number.toString());
         const shuffledArray = lodash.shuffle(array);
@@ -64,6 +54,7 @@ class Game extends Entity {
             player.cards = shuffledArray.splice(0, this.currentLevel);
             await playerRepository.save(player);
         }
+        await gameRepository.save(this);
     }
 
     static async findPlayersByRoomId(roomId: string) {
@@ -73,10 +64,12 @@ class Game extends Entity {
     }
 
     static async findPlayerByRoomIdAndUserId(roomId: string, userId: string) {
-        return playerRepository.search().where("userId").eq(userId).where("gameId").eq(roomId).first();
+        const game = await this.findByRoomId(roomId);
+        if (!game) return null;
+        return playerRepository.search().where("userId").eq(userId).where("gameId").eq(game.entityId).first();
     }
     static async findPlayerByGameIdAndUserId(gameId: string, userId: string) {
-        return playerRepository.search().where("userId").eq(userId).where("entityId").eq(gameId).first();
+        return playerRepository.search().where("userId").eq(userId).where("gameId").eq(gameId).first();
     }
 
     get hasGameEnded() {
@@ -94,6 +87,7 @@ class Game extends Entity {
             .equals(userId)
             .where("gameId")
             .equals(this.entityId)
+            .return
             .first();
     }
 
@@ -107,7 +101,7 @@ class Game extends Entity {
     static async create({ roomId }: { roomId: string }) {
         const gameEntity = await gameRepository.createAndSave({
             roomId,
-            _currentLevel: 0,
+            currentLevel: 0,
             totalMistakes: 0,
         });
         return gameEntity;
@@ -124,7 +118,7 @@ const schema = new Schema(
     Game,
     {
         totalMistakes: { type: "number" },
-        _currentLevel: { type: "number" },
+        currentLevel: { type: "number" },
         roomId: { type: "string" },
         cards: { type: "string[]" },
         shootingStars: { type: "number" },

@@ -7,6 +7,7 @@ import env from "@utils/env";
 import { generateSocketToken } from "@utils/token";
 import { Request, Response } from "express";
 import lodash from "lodash";
+import logger from "@/setups/winston";
 
 export const createRoom = async (
     req: Request<{}, {}, IRoomCreateForm>,
@@ -38,9 +39,13 @@ export const getRoom = async (
     const players = await Game.findPlayersByRoomId(room._id.toString());
     return res.send({
         ...room.toJSON(),
-        users: await Promise.all(players.filter((player) => player.isConnected).map(async (player) => {
-          return lodash.pick(await player.user, ['_id', 'nickname']);
-        })),
+        users: await Promise.all(
+            players
+                .filter((player) => player.isConnected)
+                .map(async (player) => {
+                    return lodash.pick(await player.user, ["_id", "nickname"]);
+                })
+        ),
     });
 };
 
@@ -94,52 +99,90 @@ export const joinRoomByInvitationLink = async (
         .redirect(`${env.APP_WEB_URL}/room/${room._id}`);
 };
 
-export const gameStart = async (req: Request<{ id: string }, {}, { }>, res) => {
-    const room: IRoomDocument = await Room.findById(req.params.id).catch(() => null);
+export const gameStart = async (
+    req: Request<{ id: string }, {}, {}>,
+    res: Response
+) => {
+    const room: IRoomDocument = await Room.findById(req.params.id).catch(
+        () => null
+    );
     if (!room) return res.status(404).send({ message: "Room not found" });
-    if (room.authorId.toString() !== req.user._id.toString()) return res.status(401).send({ message: "You are not the author of this room" });
+    if (room.authorId.toString() !== req.user._id.toString())
+        return res
+            .status(401)
+            .send({ message: "You are not the author of this room" });
     const game = await Game.findByRoomId(room._id.toString());
     if (!game) return res.status(404).send({ message: "Game not found" });
-    if (game.hasStarted) return res.status(400).send({ message: "Game already started" });
+    if (game.hasStarted)
+        return res.status(400).send({
+            message: "Game already started",
+            game: { _id: game.entityId },
+        });
+    logger.info(`game:${game.entityId} started (room:${room._id.toString()}})`);
     await game.start();
-    socketHandler.emitTo(room._id.toString(), 'game:started');
-    return res.send({ message: "Game started successfully", game: game.toJSON() });
-} 
+    socketHandler.emitTo(room._id.toString(), "game:started");
+    return res.send({
+        message: "Game started successfully",
+        game: { _id: game.entityId },
+    });
+};
 
-export const getInHandCardsByRoom = async (req: Request<{ id: string }, {}, { }>, res) => {
-    const player = await Game.findPlayerByRoomIdAndUserId(req.params.id, req.user._id.toString());
+export const getInHandCards = async (
+    req: Request<{ id: string }, {}, {}>,
+    res: Response
+) => {
+    const player = await Game.findPlayerByRoomIdAndUserId(
+        req.params.id,
+        req.user._id.toString()
+    );
     if (!player) return res.status(404).send({ message: "Player not found" });
     return res.send({ cards: player.cards });
-}
+};
 
-export const getInGameCardsByRoom = async (req: Request<{ id: string }, {}, { }>, res) => {
+export const getInGameCards = async (
+    req: Request<{ id: string }, {}, {}>,
+    res: Response
+) => {
     const game = await Game.findByRoomId(req.params.id);
     if (!game) return res.status(404).send({ message: "Game not found" });
     return res.send({ cards: game.cards });
-}
+};
 
-export const getInHandCardsByGame = async (req: Request<{ id: string }, {}, { }>, res) => {
-    const player = await Game.findPlayerByGameIdAndUserId(req.params.id, req.user._id.toString());
-    if (!player) return res.status(404).send({ message: "Player not found" });
-    return res.send({ cards: player.cards });
-}
-
-export const getInGameCardsByGame = async (req: Request<{ id: string }, {}, { }>, res) => {
-    const game = await Game.findById(req.params.id);
+export const getGame = async (
+    req: Request<{ id: string }, {}, { card: string }>,
+    res: Response
+) => {
+    const game = await Game.findByRoomId(req.params.id);
     if (!game) return res.status(404).send({ message: "Game not found" });
-    return res.send({ cards: game.cards });
-}
-// import { Request, RequestHandler } from 'express';
-// import { IContactUsForm } from '@/models/general.model';
-// import { sendEmail } from '@queues/email.queue';
-// import { render } from '@/utils/html';
-// import env from '@/utils/env';
+    const player = await Game.findPlayerByRoomIdAndUserId(
+        req.params.id,
+        req.user._id.toString()
+    );
+    if (!player) return res.status(404).send({ message: "Player not found" });
+    return res.send({
+        game: {
+            _id: game.entityId,
+            cards: game.cards,
+            hasShootingStar: !!game.shootingStars,
+            currentLevel: game.currentLevel,
+            players: (await game.players).map((player) => {
+                return {
+                    _id: player.userId,
+                    nickname: player.userNickname,
+                    cards: player.cards.length,
+                }
+            }),
+        },
+        cards: player.cards,
+    });
+};
 
-// export const contactus: RequestHandler = async (req: Request<{}, {}, IContactUsForm>, res) => {
-//     const { firstname, lastname, email, message } = req.body;
-//     const formItself = await render('contactus_form', { firstname, lastname, email, message });
-//     const formSuccess = await render('contactus_form_submitted_successfully', {})
-//     await sendEmail({email, html: formSuccess, subject: 'Contact Us Form'});
-//     await sendEmail({email: env.EMAIL_USER, html: formItself, subject: 'Contact Us Form'});
-//     res.send({message: "Contact us form submitted successfully"});
-// }
+export const playCard = async (
+    req: Request<{ id: string }, {}, { card: string }>,
+    res: Response
+) => {};
+
+export const getPlayers = async (
+    req: Request<{ id: string }, {}, { card: string }>,
+    res: Response
+) => {};

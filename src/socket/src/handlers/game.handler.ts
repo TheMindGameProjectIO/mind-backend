@@ -59,8 +59,9 @@ export default async function gameHandler(socket: IGameSocket) {
         player = await Player.create({
             userId,
             gameId: game.entityId,
+            userNickname: socket.data.user.nickname,
         });
-        logger.info(`user:${userId} player is created`);
+        logger.info(`user:${userId} player with nickname:${socket.data.user.nickname} is created`);
     /**
      * If player is found, and is already connected, delete current socket and return
      */
