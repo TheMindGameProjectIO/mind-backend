@@ -8,6 +8,7 @@ import { generateSocketToken } from "@utils/token";
 import { Request, Response } from "express";
 import lodash from "lodash";
 import logger from "@/setups/winston";
+import gameHandler from "@/socket/src/handlers/game.handler";
 
 export const createRoom = async (
     req: Request<{}, {}, IRoomCreateForm>,
@@ -121,6 +122,7 @@ export const gameStart = async (
     logger.info(`game:${game.entityId} started (room:${room._id.toString()}})`);
     await game.start();
     socketHandler.emitTo(room._id.toString(), "game:started");
+    gameHandler.emitter.emit(gameHandler.events.gameStart(req.params.id));
     return res.send({
         message: "Game started successfully",
         game: { _id: game.entityId },
