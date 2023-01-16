@@ -18,6 +18,22 @@ class Game extends Entity {
         return this.currentLevel > 0;
     }
 
+    static isShootingStar(card: string) {
+        return card === '0'
+    }
+
+    get hasShootingStar() {
+        return this.shootingStars > 0;
+    }
+
+    get playerCards(): Promise<string[]> {
+        return new Promise((resolve) => {
+            this.players.then((players) => {
+                resolve(players.map((player) => player.cards).flat(2));
+            })
+        });
+    }
+
     get playersCount() {
         return playerRepository
             .search()
@@ -31,11 +47,12 @@ class Game extends Entity {
             .search()
             .where("gameId")
             .eq(this.entityId)
+            .return
             .all();
     }
 
     static findById(id: string) {
-        return playerRepository.fetch(id);
+        return gameRepository.fetch(id);
     }
 
     async start() {

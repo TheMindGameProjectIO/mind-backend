@@ -182,7 +182,9 @@ export const getGame = async (
 export const playCard = async (
     req: Request<{ id: string }, {}, { card: string }>,
     res: Response
-) => {};
+) => {
+    
+};
 
 export const getPlayers = async (
     req: Request<{ id: string }, {}, { card: string }>,

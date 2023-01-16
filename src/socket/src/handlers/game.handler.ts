@@ -2,9 +2,33 @@ import Game from "@redisDB/schemas/Game";
 import Player from "@redisDB/schemas/Player";
 import logger from "@setups/winston";
 import socketHandler from "@/socket";
-import { IGameSocket } from "@/socket/types";
+import { IGameSocket, IGameSocketData } from "@/socket/types";
 import Room from "@schemas/room.schema";
 import EventEmitter from "events";
+
+const getGameSocketData = async (
+    game: Game,
+    player: Player,
+    data: IGameSocketData
+): Promise<IGameSocketData> => {
+    return {
+        ...data,
+        game: {
+            _id: game.entityId,
+            cards: game.cards,
+            hasShootingStar: game.hasShootingStar,
+            currentLevel: game.currentLevel,
+            players: (await game.players).map((player) => {
+                return {
+                    _id: player.userId,
+                    nickname: player.userNickname,
+                    cards: player.cards.length,
+                };
+            }),
+        },
+        cards: player.cards,
+    };
+};
 
 const gameHandler = {
     events: {
@@ -107,38 +131,81 @@ const gameHandler = {
         socket.on("disconnect", async () => {
             logger.info(`user:${userId} player is disconnected`);
             await player.disconnect();
-            gameHandler.emitter.removeAllListeners(gameHandler.events.gameStart(socket.data.data.roomId));
+            gameHandler.emitter.removeAllListeners(
+                gameHandler.events.gameStart(socket.data.data.roomId)
+            );
         });
 
-        gameHandler.emitter.on(gameHandler.events.gameStart(socket.data.data.roomId), () => {
-            logger.info(`user:${userId} has started the game`);
+        const gameId = game.entityId;
 
-            //TODO: implement game start logic
-        });
+        gameHandler.emitter.on(
+            gameHandler.events.gameStart(socket.data.data.roomId),
+            () => {
+                logger.info(`user:${userId} has started the game`);
 
-        // gameEventEmitter.on("")
+                //TODO: implement when user leaves the game
 
-        // socket.on()
+                socket.on("game:player:play", async (card) => {
+                    logger.info(`user:${userId} has played ${card}`);
+                    const game = await Game.findById(gameId);
+                    const player = await game.findPlayerByUserId(userId);
+                    let data: IGameSocketData = {
+                        isShootingStar: false,
+                        isSmallest: false,
+                        playedCard: card,
+                    } as IGameSocketData;
 
-        // /**
-        //  * if user tries to start the game
-        //  */
-        // socket.on("game:start", async () => {
+                    // is shooting star
+                    //TODO: implement
+                    if (Game.isShootingStar(card) && game.hasShootingStar) {
+                        data["isShootingStar"] = true;
+                        const players = await game.players;
+                        const smallestCards = players.map((player) =>
+                            Math.min(...player.cards.map((card) => +card))
+                        );
+                        players.forEach((player, index) =>
+                            player.removeCard(smallestCards[index].toString())
+                        );
+                    } else {
+                        // find smallest card
+                        const cards = (await game.playerCards).map(
+                            (card) => +card
+                        );
+                        const smallestCard = Math.max(...cards);
 
-        //     /**
-        //      * stop listening to game:start event
-        //      */
-        //     socket.removeAllListeners("game:start");
+                        // if card is smaller than smallest card, add mistake and remove card from player
+                        if (smallestCard < +card) {
+                            game.totalMistakes++;
+                            await player.removeCard(card);
 
-        //     //GAME LOGIC
+                            //TODO: has any lives to continue?
+                        }
+                        // if card is bigger than smallest card, remove card from player and add card to game
+                        else {
+                            data["isSmallest"] = true;
+                            await player.playCard(card);
+                        }
+                    }
 
-        //     //TODO: implement game start logic
+                    data = await getGameSocketData(game, player, data);
+                    socket
+                        .to(socket.data.data.roomId)
+                        .emit("game:player:played", data);
+                    socket.emit("game:self:played", data);
 
-        //     /**
-        //      * notify the user that the game has started and start the game
-        //      */
-        //     logger.info(`user:${userId} has started the game`);
-        // });
+                    if ((await game.playerCards).length === 0) {
+                        game.currentLevel++;
+                        game.startLevel();
+
+                        data = await getGameSocketData(game, player, data);
+                        socket
+                            .to(socket.data.data.roomId)
+                            .emit("game:player:played", data);
+                        socket.emit("game:self:played", data);
+                    }
+                });
+            }
+        );
     },
 };
 export default gameHandler;
