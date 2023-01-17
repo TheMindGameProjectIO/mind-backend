@@ -18,6 +18,15 @@ class Player extends Entity {
         return User.findById(this.userId);
     }
 
+
+    static async disconnectAll() {
+        const players = await playerRepository.search().where("isConnected").eq(true).returnAll()
+        players.forEach(async (player) => {
+            await player.disconnect();
+        })
+
+    }
+
     async set({ isConnected }: { isConnected: boolean }) {
         this.isConnected = isConnected;
         await playerRepository.save(this);
@@ -45,7 +54,7 @@ class Player extends Entity {
     }
 
     async playCard(card: string) {
-        const game = await gameRepository.search().where("entityId").eq(this.gameId).first();
+        const game = await gameRepository.fetch(this.gameId);
         await game.addCard(card);
         await this.removeCard(card);
     }

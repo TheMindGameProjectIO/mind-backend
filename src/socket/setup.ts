@@ -80,9 +80,9 @@ io.use(async (socket, next) => {
      *
      * if yes, then socket connection will be processed as authenticated
      */
-    let userEntity: IUserDocument = await User.findById(_id);
+    let userEntity: IUser = (await User.findById(_id))?.toJSON?.();
     if (!userEntity) {
-      userEntity = { _id} as IUserDocument
+      userEntity = { _id} as IUser
       logger.warn(`socket connection ${socket.id} is processed as anonymous`);
     } else {
       logger.info(`socket connection ${socket.id} is processed as authenticated with nickname:${userEntity.nickname}`);

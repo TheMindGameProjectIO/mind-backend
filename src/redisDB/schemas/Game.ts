@@ -18,9 +18,21 @@ class Game extends Entity {
         return this.currentLevel > 0;
     }
 
+    get hasLost(): Promise<boolean> {
+        return new Promise(async (resolve) => {
+            const players = await this.players;
+            resolve(players.length === this.totalMistakes);
+        });
+    }
+
     static isShootingStar(card: string) {
         return card === '0'
     }
+
+    async handleMistake() {
+        this.totalMistakes++;
+        await gameRepository.save(this);
+    }  
 
     get hasShootingStar() {
         return this.shootingStars > 0;
@@ -91,6 +103,14 @@ class Game extends Entity {
 
     get hasGameEnded() {
         return this.currentLevel > Game.LAST_LEVEL_NUMBER;
+    }
+
+    get hasWon() {
+        return new Promise(async (resolve) => {
+            this.hasLost.then((hasLost) => {
+                resolve(!hasLost && this.hasGameEnded);
+            });
+        });
     }
 
     static findByRoomId(roomId: string) {

@@ -121,7 +121,6 @@ export const gameStart = async (
         });
     logger.info(`game:${game.entityId} started (room:${room._id.toString()}})`);
     await game.start();
-    socketHandler.emitTo(room._id.toString(), "game:started");
     gameHandler.emitter.emit(gameHandler.events.gameStart(req.params.id));
     return res.send({
         message: "Game started successfully",
