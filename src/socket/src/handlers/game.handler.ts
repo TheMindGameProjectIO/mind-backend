@@ -145,6 +145,112 @@ const gameHandler = {
             .to(socket.data.data.roomId)
             .emit("game:player:joined", gameLobbySocketData);
 
+        const gameLoop = async () => {
+            logger.info(`user:${userId} has started the game`);
+
+            //TODO: implement when user leaves the game
+
+            const game = await Game.findById(gameId);
+            const player = await game.findPlayerByUserId(userId);
+
+            socket.emit("game:started", {
+                game: {
+                    _id: game.entityId,
+                    cards: game.cards,
+                    hasShootingStar: !!game.shootingStars,
+                    currentLevel: game.currentLevel,
+                    players: (await game.players).map((player) => {
+                        return {
+                            _id: player.userId,
+                            nickname: player.userNickname,
+                            cards: player.cards.length,
+                        };
+                    }
+                    ),
+                },
+                cards: player.cards,
+            })
+
+            socket.on("game:player:play", async (card) => {
+                logger.info(`user:${userId} has played ${card}`);
+                const game = await Game.findById(gameId);
+
+                if (await game.hasLost) {
+                    return socket.in(socket.data.data.roomId).emit("game:lost");
+                }
+
+                if (await game.hasWon) {
+                    return socket.in(socket.data.data.roomId).emit("game:won");
+                }
+
+                const player = await game.findPlayerByUserId(userId);
+                let data: IGameSocketData = {
+                    isShootingStar: false,
+                    isSmallest: false,
+                    playedCard: card,
+                } as IGameSocketData;
+
+                // is shooting star
+                //TODO: implement
+                if (Game.isShootingStar(card) && game.hasShootingStar) {
+                    data["isShootingStar"] = true;
+                    const players = await game.players;
+                    const smallestCards = players.map((player) =>
+                        Math.min(...player.cards.map((card) => +card))
+                    );
+                    players.forEach((player, index) =>
+                        player.removeCard(smallestCards[index].toString())
+                    );
+                } else {
+                    // find smallest card
+                    const cards = (await game.playerCards).map(
+                        (card) => +card
+                    );
+                    const smallestCard = Math.max(...cards);
+
+                    // if card is smaller than smallest card, add mistake and remove card from player
+                    if (smallestCard < +card) {
+                        await game.handleMistake();
+                        await player.removeCard(card);
+                    }
+                    // if card is bigger than smallest card, remove card from player and add card to game
+                    else {
+                        data["isSmallest"] = true;
+                        await player.removeCard(card);
+                        await game.addCard(card);
+                    }
+                }
+
+                //TODO: replace socketHandler.io.in to socket.in
+                const sockets = await socketHandler.io.in(socket.data.data.roomId).fetchSockets()
+
+        
+                await Promise.all(sockets.map(async socket => {
+                    const player = await game.findPlayerByUserId(socket.data.user._id)
+                    socket.emit("game:changed", await getGameSocketData(game, player, data));
+                }));
+                
+                const hasGameEnded = (await game.playerCards).length === 0
+                if (hasGameEnded) {
+                    game.currentLevel++;
+                    await game.startLevel();
+
+                    await Promise.all(sockets.map(async socket => {
+                        const player = await game.findPlayerByUserId(socket.data.user._id)
+                        socket.emit("game:changed", await getGameSocketData(game, player, data));
+                    }));
+                }
+                
+                if (await game.hasLost) {
+                    return socket.in(socket.data.data.roomId).emit("game:lost");
+                }
+
+                if (await game.hasWon) {
+                    return socket.in(socket.data.data.roomId).emit("game:won");
+                }
+            });
+        }
+
         /**
          * if user disconnects, disconnect the player
          */
@@ -152,8 +258,9 @@ const gameHandler = {
             logger.info(`user:${userId} player is disconnected`);
             const player = await game.findPlayerByUserId(userId);
             await player.disconnect();
-            gameHandler.emitter.removeAllListeners(
-                gameHandler.events.gameStart(socket.data.data.roomId)
+            gameHandler.emitter.off(
+                gameHandler.events.gameStart(socket.data.data.roomId),
+                gameLoop
             );
         });
 
@@ -161,111 +268,7 @@ const gameHandler = {
 
         gameHandler.emitter.on(
             gameHandler.events.gameStart(socket.data.data.roomId),
-            async () => {
-                logger.info(`user:${userId} has started the game`);
-
-                //TODO: implement when user leaves the game
-
-                const game = await Game.findById(gameId);
-                const player = await game.findPlayerByUserId(userId);
-
-                socket.emit("game:started", {
-                    game: {
-                        _id: game.entityId,
-                        cards: game.cards,
-                        hasShootingStar: !!game.shootingStars,
-                        currentLevel: game.currentLevel,
-                        players: (await game.players).map((player) => {
-                            return {
-                                _id: player.userId,
-                                nickname: player.userNickname,
-                                cards: player.cards.length,
-                            };
-                        }
-                        ),
-                    },
-                    cards: player.cards,
-                })
-
-                socket.on("game:player:play", async (card) => {
-                    logger.info(`user:${userId} has played ${card}`);
-                    const game = await Game.findById(gameId);
-
-                    if (await game.hasLost) {
-                        return socket.in(socket.data.data.roomId).emit("game:lost");
-                    }
-
-                    if (await game.hasWon) {
-                        return socket.in(socket.data.data.roomId).emit("game:won");
-                    }
-
-                    const player = await game.findPlayerByUserId(userId);
-                    let data: IGameSocketData = {
-                        isShootingStar: false,
-                        isSmallest: false,
-                        playedCard: card,
-                    } as IGameSocketData;
-
-                    // is shooting star
-                    //TODO: implement
-                    if (Game.isShootingStar(card) && game.hasShootingStar) {
-                        data["isShootingStar"] = true;
-                        const players = await game.players;
-                        const smallestCards = players.map((player) =>
-                            Math.min(...player.cards.map((card) => +card))
-                        );
-                        players.forEach((player, index) =>
-                            player.removeCard(smallestCards[index].toString())
-                        );
-                    } else {
-                        // find smallest card
-                        const cards = (await game.playerCards).map(
-                            (card) => +card
-                        );
-                        const smallestCard = Math.max(...cards);
-
-                        // if card is smaller than smallest card, add mistake and remove card from player
-                        if (smallestCard < +card) {
-                            await game.handleMistake();
-                            await player.removeCard(card);
-                        }
-                        // if card is bigger than smallest card, remove card from player and add card to game
-                        else {
-                            data["isSmallest"] = true;
-                            await player.removeCard(card);
-                            await game.addCard(card);
-                        }
-                    }
-
-                    //TODO: replace socketHandler.io.in to socket.in
-                    const sockets = await socketHandler.io.in(socket.data.data.roomId).fetchSockets()
-
-            
-                    await Promise.all(sockets.map(async socket => {
-                        const player = await game.findPlayerByUserId(socket.data.user._id)
-                        socket.emit("game:changed", await getGameSocketData(game, player, data));
-                    }));
-                    
-                    const hasGameEnded = (await game.playerCards).length === 0
-                    if (hasGameEnded) {
-                        game.currentLevel++;
-                        await game.startLevel();
-
-                        await Promise.all(sockets.map(async socket => {
-                            const player = await game.findPlayerByUserId(socket.data.user._id)
-                            socket.emit("game:changed", await getGameSocketData(game, player, data));
-                        }));
-                    }
-                    
-                    if (await game.hasLost) {
-                        return socket.in(socket.data.data.roomId).emit("game:lost");
-                    }
-
-                    if (await game.hasWon) {
-                        return socket.in(socket.data.data.roomId).emit("game:won");
-                    }
-                });
-            }
+            gameLoop
         );
 
         game.hasStarted && gameHandler.emitter.emit(gameHandler.events.gameStart(socket.data.data.roomId));
