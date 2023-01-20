@@ -9,11 +9,17 @@ export interface IGameSocketData {
 	playedCard: string;
 	isShootingStar: boolean;
 	isSmallest: boolean;
+    player: {
+        _id: string;
+        nickname: string;
+    },
     game: {
         _id: string;
         cards: string[];
         hasShootingStar: boolean;
         currentLevel: number;
+        totalMistakes: number;
+        mistakesLeft: number;
         players: {
             _id: string;
             nickname: string;

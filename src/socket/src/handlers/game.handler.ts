@@ -13,13 +13,20 @@ import EventEmitter from "events";
 const getGameSocketData = async (
     game: Game,
     player: Player,
-    data: IGameSocketData
+    data: IGameSocketData,
+    currentPlayer: Player
 ): Promise<IGameSocketData> => {
     return {
         ...data,
+        player: {
+            _id: currentPlayer.userId,
+            nickname: currentPlayer.userNickname,
+        },
         game: {
             _id: game.entityId,
             cards: game.cards,
+            mistakesLeft: await game.mistakesLeft,
+            totalMistakes: game.totalMistakes,
             hasShootingStar: game.hasShootingStar,
             currentLevel: game.currentLevel,
             players: (await game.players).map((player) => {
@@ -165,16 +172,15 @@ const gameHandler = {
                             nickname: player.userNickname,
                             cards: player.cards.length,
                         };
-                    }
-                    ),
+                    }),
                 },
                 cards: player.cards,
-            })
+            });
 
             socket.on("game:player:play", async (card) => {
                 logger.info(`user:${userId} has played ${card}`);
                 const game = await Game.findById(gameId);
-
+                
                 if (await game.hasLost) {
                     return socket.in(socket.data.data.roomId).emit("game:lost");
                 }
@@ -203,9 +209,7 @@ const gameHandler = {
                     );
                 } else {
                     // find smallest card
-                    const cards = (await game.playerCards).map(
-                        (card) => +card
-                    );
+                    const cards = (await game.playerCards).map((card) => +card);
                     const smallestCard = Math.max(...cards);
 
                     // if card is smaller than smallest card, add mistake and remove card from player
@@ -222,25 +226,53 @@ const gameHandler = {
                 }
 
                 //TODO: replace socketHandler.io.in to socket.in
-                const sockets = await socketHandler.io.in(socket.data.data.roomId).fetchSockets()
+                const sockets = await socketHandler.io
+                    .in(socket.data.data.roomId)
+                    .fetchSockets();
 
-        
-                await Promise.all(sockets.map(async socket => {
-                    const player = await game.findPlayerByUserId(socket.data.user._id)
-                    socket.emit("game:changed", await getGameSocketData(game, player, data));
-                }));
-                
-                const hasGameEnded = (await game.playerCards).length === 0
+                game.flushCache();
+
+                const currentPlayer = player;
+                await Promise.all(
+                    sockets.map(async (socket) => {
+                        const player = await game.findPlayerByUserId(
+                            socket.data.user._id
+                        );
+                        socket.emit(
+                            "game:changed",
+                            await getGameSocketData(
+                                game,
+                                player,
+                                data,
+                                currentPlayer
+                            )
+                        );
+                    })
+                );
+
+                const hasGameEnded = (await game.playerCards).length === 0;
                 if (hasGameEnded) {
                     game.currentLevel++;
                     await game.startLevel();
 
-                    await Promise.all(sockets.map(async socket => {
-                        const player = await game.findPlayerByUserId(socket.data.user._id)
-                        socket.emit("game:changed", await getGameSocketData(game, player, data));
-                    }));
+                    await Promise.all(
+                        sockets.map(async (socket) => {
+                            const player = await game.findPlayerByUserId(
+                                socket.data.user._id
+                            );
+                            socket.emit(
+                                "game:changed",
+                                await getGameSocketData(
+                                    game,
+                                    player,
+                                    data,
+                                    currentPlayer
+                                )
+                            );
+                        })
+                    );
                 }
-                
+
                 if (await game.hasLost) {
                     return socket.in(socket.data.data.roomId).emit("game:lost");
                 }
@@ -249,7 +281,7 @@ const gameHandler = {
                     return socket.in(socket.data.data.roomId).emit("game:won");
                 }
             });
-        }
+        };
 
         /**
          * if user disconnects, disconnect the player
@@ -271,7 +303,10 @@ const gameHandler = {
             gameLoop
         );
 
-        game.hasStarted && gameHandler.emitter.emit(gameHandler.events.gameStart(socket.data.data.roomId));
+        game.hasStarted &&
+            gameHandler.emitter.emit(
+                gameHandler.events.gameStart(socket.data.data.roomId)
+            );
     },
 };
 export default gameHandler;

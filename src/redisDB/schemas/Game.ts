@@ -1,5 +1,5 @@
 import { Entity, Schema } from "redis-om";
-import { playerRepository } from "./Player";
+import Player, { playerRepository } from "./Player";
 import lodash from "lodash";
 import client from "../setup";
 // import { cardRepository } from "./Card";
@@ -13,26 +13,36 @@ interface Game {
 }
 
 class Game extends Entity {
-    public static LAST_LEVEL_NUMBER: number = 0;
+    public static LAST_LEVEL_NUMBER: number = 12;
+    protected _players: Player[] = null;
     get hasStarted() {
         return this.currentLevel > 0;
     }
 
-    get hasLost(): Promise<boolean> {
-        return new Promise(async (resolve) => {
-            const players = await this.players;
-            resolve(players.length === this.totalMistakes);
+    get mistakesLeft(): Promise<number> {
+        return new Promise((resolve) => {
+            this.players.then((players) => {
+                resolve(Math.max(this.totalMistakes - players.length, 0));
+            });
         });
     }
 
+    get hasLost(): Promise<boolean> {
+        return new Promise((resolve) =>
+            this.mistakesLeft.then((mistakesLeft) => {
+                resolve(mistakesLeft === 0);
+            })
+        );
+    }
+
     static isShootingStar(card: string) {
-        return card === '0'
+        return card === "0";
     }
 
     async handleMistake() {
         this.totalMistakes++;
         await gameRepository.save(this);
-    }  
+    }
 
     get hasShootingStar() {
         return this.shootingStars > 0;
@@ -42,7 +52,7 @@ class Game extends Entity {
         return new Promise((resolve) => {
             this.players.then((players) => {
                 resolve(players.map((player) => player.cards).flat(2));
-            })
+            });
         });
     }
 
@@ -54,13 +64,24 @@ class Game extends Entity {
             .count();
     }
 
-    get players() {
+    public getPlayers() {
         return playerRepository
             .search()
             .where("gameId")
             .eq(this.entityId)
-            .return
-            .all();
+            .return.all();
+    }
+
+    get players(): Promise<Player[]> {
+        return new Promise((resolve) => {
+            if (this._players) return resolve(this._players);
+            this.getPlayers()
+                .then((players) => {
+                    this._players = players;
+                    resolve(players);
+                })
+                .catch(() => resolve([] as Player[]));
+        });
     }
 
     static findById(id: string) {
@@ -69,14 +90,14 @@ class Game extends Entity {
 
     async start() {
         this.currentLevel = 1;
-        await this.startLevel()
+        await this.startLevel();
         gameRepository.save(this);
     }
 
     async startLevel() {
         this.cards = [];
         this.shootingStars++;
-        const players = await playerRepository.search().where("gameId").eq(this.entityId).all();
+        const players = await this.players;
         const array = lodash.range(1, 101).map((number) => number.toString());
         const shuffledArray = lodash.shuffle(array);
         for (const player of players) {
@@ -95,14 +116,30 @@ class Game extends Entity {
     static async findPlayerByRoomIdAndUserId(roomId: string, userId: string) {
         const game = await this.findByRoomId(roomId);
         if (!game) return null;
-        return playerRepository.search().where("userId").eq(userId).where("gameId").eq(game.entityId).first();
+        return playerRepository
+            .search()
+            .where("userId")
+            .eq(userId)
+            .where("gameId")
+            .eq(game.entityId)
+            .first();
     }
     static async findPlayerByGameIdAndUserId(gameId: string, userId: string) {
-        return playerRepository.search().where("userId").eq(userId).where("gameId").eq(gameId).first();
+        return playerRepository
+            .search()
+            .where("userId")
+            .eq(userId)
+            .where("gameId")
+            .eq(gameId)
+            .first();
     }
 
     get hasGameEnded() {
         return this.currentLevel > Game.LAST_LEVEL_NUMBER;
+    }
+
+    flushCache() {
+        this._players = null;
     }
 
     get hasWon() {
@@ -124,8 +161,7 @@ class Game extends Entity {
             .equals(userId)
             .where("gameId")
             .equals(this.entityId)
-            .return
-            .first();
+            .return.first();
     }
 
     static async gameExists(roomId: string) {
@@ -148,7 +184,6 @@ class Game extends Entity {
         this.cards.push(...card);
         await gameRepository.save(this);
     }
-
 }
 
 const schema = new Schema(
