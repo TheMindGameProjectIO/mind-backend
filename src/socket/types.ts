@@ -6,16 +6,31 @@ import { SocketData } from "./classes";
 import Player from "@redisDB/schemas/Player";
 
 export interface IGameSocketData {
-	playedCard: string;
-	isShootingStar: boolean;
-	isSmallest: boolean;
     player: {
         _id: string;
         nickname: string;
+        cards: string[];
+    },
+    shootingStar: {
+        voted: number;
+        total: number;
+        isVoted: boolean;
+        isVoting: boolean;
+    };
+    played?: {
+        card: string;
+        isShootingStar: boolean;
+        isSmallest: boolean;
+        player: {
+            _id: string;
+            nickname: string;
+        }
     },
     game: {
         _id: string;
         cards: string[];
+        hasWon: boolean;
+        hasLost: boolean;
         hasShootingStar: boolean;
         currentLevel: number;
         totalMistakes: number;
@@ -24,9 +39,9 @@ export interface IGameSocketData {
             _id: string;
             nickname: string;
             cards: number;
+            isOnline: boolean;
         }[];
     };
-    cards: string[];
 }
 
 export interface IGameLobbySocketData {
@@ -41,23 +56,6 @@ export interface IGameLobbySocketData {
     }[]
 }
 
-interface IGameStartSocketData {
-    game: {
-
-        _id: string;
-        cards: string[];
-        hasShootingStar: boolean;
-        currentLevel: number;
-        players: {
-            _id: string;
-            nickname: string;
-            cards: number;
-        }[];
-    },
-    cards: string[];
-
-}
-
 export interface ServerToClientEvents {
     "game:lost": () => void;
     "game:won": () => void;
@@ -65,17 +63,16 @@ export interface ServerToClientEvents {
     "auth:verified:password:reset": ({ token }: { token: string }) => void;
     ping: () => void;
     pong: () => void;
-    "game:self:joined": (gameLobby: IGameLobbySocketData) => void;
     "game:created": () => void;
     message: (message: string) => void;
     response: (
         event: keyof ClientToServerEvents,
         response: { message: string; status: "success" | "fail" }
     ) => void;
-    "game:player:joined": (gameLobby: IGameLobbySocketData) => void;
+    "game:lobby:changed": (gameLobby: IGameLobbySocketData) => void;
     "game:player:left": () => void;
     "game:self:left": () => void;
-    "game:started": (game: IGameStartSocketData) => void;
+    "game:started": (game: IGameSocketData) => void;
     "game:player:played": (game: IGameSocketData) => void;
     "game:self:played": (game: IGameSocketData) => void;
     "game:changed": (game: IGameSocketData) => void;

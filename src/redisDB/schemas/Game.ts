@@ -13,7 +13,7 @@ interface Game {
 }
 
 class Game extends Entity {
-    public static LAST_LEVEL_NUMBER: number = 12;
+    public static LAST_LEVEL_NUMBER: number = 3; //TODO: change to 12
     protected _players: Player[] = null;
     get hasStarted() {
         return this.currentLevel > 0;
@@ -22,7 +22,7 @@ class Game extends Entity {
     get mistakesLeft(): Promise<number> {
         return new Promise((resolve) => {
             this.players.then((players) => {
-                resolve(Math.max(this.totalMistakes - players.length, 0));
+                resolve(Math.max(players.length - this.totalMistakes, 0));
             });
         });
     }
@@ -39,8 +39,11 @@ class Game extends Entity {
         return card === "0";
     }
 
-    async handleMistake() {
+    async handleMistake(card: string) {
         this.totalMistakes++;
+        card && await Promise.all((await this.players).map(async (player) => {
+            await player.removeCardsLessThanOrEqual(card);
+        }));
         await gameRepository.save(this);
     }
 
@@ -64,12 +67,18 @@ class Game extends Entity {
             .count();
     }
 
-    public getPlayers() {
-        return playerRepository
-            .search()
-            .where("gameId")
-            .eq(this.entityId)
-            .return.all();
+    public getPlayers(isConnected: boolean = null) {
+        let query = playerRepository .search()
+            
+        .where("gameId")
+        .eq(this.entityId)
+        if (isConnected != null) {
+            query = query.where("isConnected").eq(isConnected)
+        }
+        return query
+            .sortBy("userNickname")
+            .return
+            .all();
     }
 
     get players(): Promise<Player[]> {
@@ -134,15 +143,27 @@ class Game extends Entity {
             .first();
     }
 
-    get hasGameEnded() {
-        return this.currentLevel > Game.LAST_LEVEL_NUMBER;
+    get hasGameEnded(): Promise<boolean> {
+        return new Promise(async (resolve) => {
+            this.hasRoundEnded.then((hasRoundEnded) => {
+                resolve(hasRoundEnded && this.currentLevel >= Game.LAST_LEVEL_NUMBER);
+            });
+        });
     }
 
     flushCache() {
         this._players = null;
     }
 
-    get hasWon() {
+    get hasRoundEnded(): Promise<boolean> {
+        return new Promise(async (resolve) => {
+            this.playerCards.then((playerCards) => {
+                resolve(playerCards.length === 0);
+            });
+        });
+    }
+
+    get hasWon(): Promise<boolean> {
         return new Promise(async (resolve) => {
             this.hasLost.then((hasLost) => {
                 resolve(!hasLost && this.hasGameEnded);

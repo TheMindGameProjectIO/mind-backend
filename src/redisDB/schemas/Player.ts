@@ -18,6 +18,9 @@ class Player extends Entity {
         return User.findById(this.userId);
     }
 
+    async remove() {
+        await playerRepository.remove(this.entityId);
+    }
 
     static async disconnectAll() {
         const players = await playerRepository.search().where("isConnected").eq(true).returnAll()
@@ -76,6 +79,12 @@ class Player extends Entity {
 
     static async findByUserId(userId: string) {
         return playerRepository.search().where("userId").eq(userId).first();
+    }
+
+    async removeCardsLessThanOrEqual(card: string) {
+        const cards = this.cards.filter((c) => +c > +card);
+        this.cards = cards;
+        await playerRepository.save(this);
     }
 }
 
