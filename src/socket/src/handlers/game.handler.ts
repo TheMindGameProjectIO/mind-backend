@@ -114,14 +114,7 @@ const getGameLobbySocketData = async (
     };
 };
 
-const gameHandler = {
-    events: {
-        gameStart(roomId: string) {
-            return `game:start:${roomId}`;
-        },
-    },
-    emitter: new EventEmitter(),
-    async handle(socket: IGameSocket) {
+async function gameHandler(socket: IGameSocket) {
         const userId = socket.data.user._id.toString();
         const nickname = socket.data.user.nickname;
         const roomId = socket.data.data.roomId;
@@ -226,13 +219,7 @@ const gameHandler = {
 
             //TODO: implement when user leaves the game
 
-            const game = await Game.findById(gameId);
-            const player = await game.findPlayerByUserId(userId);
-
-            socket.emit(
-                "game:started",
-                await getGameSocketData({ game, player })
-            );
+            await sendSocketDataAll()
 
             socket.on("game:player:shootingstart", async () => {
                 logger.info(
@@ -279,21 +266,6 @@ const gameHandler = {
                 if (game.isShootingStarVoting) return;
                 if ((await game.hasLost) || (await game.hasWon)) return;
 
-                // is shooting star
-                //TODO: implement
-                // if (Game.isShootingStar(card) && game.hasShootingStar) {
-                //     logger.info(
-                //         `user:${currentPlayer.userNickname}:${userId} played the shooting card`
-                //     );
-                //     played["isShootingStar"] = true;
-                //     const players = await game.players;
-                //     const smallestCards = players.map((player) =>
-                //         Math.min(...player.cards.map((card) => +card))
-                //     );
-                //     players.forEach((player, index) =>
-                //         player.removeCard(smallestCards[index].toString())
-                //     );
-                // } else {
                 // find smallest card
                 const cards = (await game.playerCards).map((card) => +card);
                 const smallestCard = Math.min(...cards);
@@ -315,9 +287,6 @@ const gameHandler = {
                     await currentPlayer.removeCard(card);
                     await game.addCard(card);
                 }
-                // }
-
-                //TODO: replace socketHandler.io.in to socket.in
 
                 game.flushCache();
                 await sendSocketDataAll({ played });
@@ -339,45 +308,56 @@ const gameHandler = {
          */
         socket.on("disconnect", async () => {
             logger.info(`user:${userId} player is disconnected`);
+            const game = await Game.findByRoomId(roomId);
             const player = await game.findPlayerByUserId(userId);
-            await player.disconnect();
             socket.removeAllListeners('game:player:play');
 
-
-            // if (game.hasStarted) {
-            //     await player.disconnect();
-            //     const game = await Game.findByRoomId(gameId);
-            //     socketHandler.io
-            //         .in(roomId)
-            //         .emit(
-            //             "game:changed",
-            //             await getGameSocketData({ game, player })
-            //         );
-            // }  else {
-            //     await player.disconnect();
-            // }
-            // else {
-            //     const game = await Game.findByRoomId(gameId);
-            //     await player.disconnect();
-            //     socketHandler.io
-            //         .in(roomId)
-            //         .emit(
-            //             "game:lobby:changed",
-            //             await getGameLobbySocketData(game, room)
-            //         );
-            // }
-            gameHandler.emitter.off(
-                gameHandler.events.gameStart(roomId),
-                gameLoop
-            );
+            if (game.hasStarted) {
+                await player.disconnect();
+                await sendSocketDataAll();
+                socketHandler.io
+                    .in(roomId)
+                    .emit(
+                        "game:changed",
+                        await getGameSocketData({ game, player })
+                    );
+            }  
+            else {
+                await player.remove();
+                const game = await Game.findByRoomId(roomId);
+                socketHandler.io
+                    .in(roomId)
+                    .emit(
+                        "game:lobby:changed",
+                        await getGameLobbySocketData(game, room)
+                    );
+            }
         });
 
         const gameId = game.entityId;
 
-        gameHandler.emitter.on(gameHandler.events.gameStart(roomId), gameLoop);
+        if (game.hasStarted) {
+            socket.emit("game:started");
+            await gameLoop();
+        } else {
+            socket.on("game:start", async () => {
+                const game = await Game.findByRoomId(roomId);
+                // check if game has started
+                if (game.hasStarted) return;
 
-        game.hasStarted &&
-            gameHandler.emitter.emit(gameHandler.events.gameStart(roomId));
-    },
-};
+                // check if user is not alone
+                if ((await game.players).length === 1) return;
+                
+                // check if user is the author
+                if (game.authorId !== userId) return;
+
+                // start game
+                await game.start();
+
+                socketHandler.io.in(roomId).emit("game:started");
+
+                await gameLoop();
+            });
+        }
+    };
 export default gameHandler;

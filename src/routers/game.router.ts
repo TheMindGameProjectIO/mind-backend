@@ -5,7 +5,6 @@ import {
     getRoom,
     joinRoomByInvitationLink,
     joinRoom,
-    gameStart,
     getInHandCards,
     getInGameCards,
     getGame,
@@ -31,7 +30,6 @@ router.get(
     joinRoomByInvitationLink
 );
 router.post("/join/:id", authenticate, role(UserRole.User), joinRoom);
-router.post("/game/start/:id", authenticate, role(UserRole.User), gameStart);
 router.get(
     "/:id/game/cards/player",
     authenticate,

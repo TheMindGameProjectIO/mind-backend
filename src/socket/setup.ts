@@ -106,7 +106,7 @@ io.use(async (socket, next) => {
   });
 
   socket.data.type === ISocketAuthType.GAME &&
-    await gameHandler.handle(socket as IGameSocket);
+    await gameHandler(socket as IGameSocket);
 });
 
 io.listen(env.SOCKET_PORT);

@@ -2,6 +2,7 @@ import { Entity, Schema } from "redis-om";
 import Player, { playerRepository } from "./Player";
 import lodash from "lodash";
 import client from "../setup";
+import Room from "@/schemas/room.schema";
 // import { cardRepository } from "./Card";
 
 interface Game {
@@ -9,6 +10,7 @@ interface Game {
     currentLevel: number;
     roomId: string;
     cards: string[];
+    authorId: string;
     shootingStars: number;
     shootingStarVotingUserId: string;
 }
@@ -228,8 +230,10 @@ class Game extends Entity {
     }
 
     static async create({ roomId }: { roomId: string }) {
+        const authorId = await Room.findById(roomId).then((room) => room.authorId.toString());
         const gameEntity = await gameRepository.createAndSave({
             roomId,
+            authorId,
             currentLevel: 0,
             totalMistakes: 0,
             shootingStarVotingUserId: null,
@@ -256,6 +260,7 @@ const schema = new Schema(
         cards: { type: "string[]" },
         shootingStars: { type: "number" },
         shootingStarVotingUserId: { type: "string" },
+        authorId: { type: "string" },
     },
     {
         dataStructure: "JSON",

@@ -68,9 +68,7 @@ export interface ServerToClientEvents {
     "game:lobby:changed": (gameLobby: IGameLobbySocketData) => void;
     "game:player:left": () => void;
     "game:self:left": () => void;
-    "game:started": (game: IGameSocketData) => void;
-    "game:player:played": (game: IGameSocketData) => void;
-    "game:self:played": (game: IGameSocketData) => void;
+    "game:started": () => void;
     "game:changed": (game: IGameSocketData) => void;
 }
 

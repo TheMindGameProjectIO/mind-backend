@@ -8,7 +8,6 @@ import { generateSocketToken } from "@utils/token";
 import { Request, Response } from "express";
 import lodash from "lodash";
 import logger from "@/setups/winston";
-import gameHandler from "@/socket/src/handlers/game.handler";
 
 export const createRoom = async (
     req: Request<{}, {}, IRoomCreateForm>,
@@ -98,34 +97,6 @@ export const joinRoomByInvitationLink = async (
     return res
         .setHeader(Header.SOCKET_GAME_AUTHORIZATION, token)
         .redirect(`${env.APP_WEB_URL}/room/${room._id}`);
-};
-
-export const gameStart = async (
-    req: Request<{ id: string }, {}, {}>,
-    res: Response
-) => {
-    const room: IRoomDocument = await Room.findById(req.params.id).catch(
-        () => null
-    );
-    if (!room) return res.status(404).send({ message: "Room not found" });
-    if (room.authorId.toString() !== req.user._id.toString())
-        return res
-            .status(401)
-            .send({ message: "You are not the author of this room" });
-    const game = await Game.findByRoomId(room._id.toString());
-    if (!game) return res.status(404).send({ message: "Game not found" });
-    if (game.hasStarted)
-        return res.status(400).send({
-            message: "Game already started",
-            game: { _id: game.entityId },
-        });
-    logger.info(`game:${game.entityId} started (room:${room._id.toString()}})`);
-    await game.start();
-    gameHandler.emitter.emit(gameHandler.events.gameStart(req.params.id));
-    return res.send({
-        message: "Game started successfully",
-        game: { _id: game.entityId },
-    });
 };
 
 export const getInHandCards = async (
