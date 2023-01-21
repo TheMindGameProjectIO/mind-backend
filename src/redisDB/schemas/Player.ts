@@ -11,6 +11,7 @@ interface Player {
     // cards: number[];
     cards: string[];
     userNickname: string;
+    hasVotedShootingStar: boolean;
 }
 
 class Player extends Entity {
@@ -30,8 +31,11 @@ class Player extends Entity {
 
     }
 
-    async set({ isConnected }: { isConnected: boolean }) {
+    async set({ isConnected, hasVotedShootingStar }: Partial<Player>) {
+        if (isConnected)
         this.isConnected = isConnected;
+        if (hasVotedShootingStar)
+        this.hasVotedShootingStar = hasVotedShootingStar;
         await playerRepository.save(this);
     }
 
@@ -56,6 +60,8 @@ class Player extends Entity {
         return this.cards.includes(card);
     }
 
+    async 
+
     async playCard(card: string) {
         const game = await gameRepository.fetch(this.gameId);
         await game.addCard(card);
@@ -73,6 +79,7 @@ class Player extends Entity {
             isConnected: false,
             cards: [],
             userNickname,
+            hasVotedShootingStar: false,
         });
         return userEntity;
     }
@@ -84,6 +91,11 @@ class Player extends Entity {
     async removeCardsLessThanOrEqual(card: string) {
         const cards = this.cards.filter((c) => +c > +card);
         this.cards = cards;
+        await playerRepository.save(this);
+    }
+
+    async voteShootingStar() {
+        this.hasVotedShootingStar = true;
         await playerRepository.save(this);
     }
 }

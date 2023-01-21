@@ -1,9 +1,7 @@
 import { ISocketAuthPayloadData } from "@/models/payload.model";
 import { ISocketAuthType } from "@/utils/enum";
-import { IUser } from "@models/user.model";
 import { Socket } from "socket.io";
 import { SocketData } from "./classes";
-import Player from "@redisDB/schemas/Player";
 
 export interface IGameSocketData {
     player: {
@@ -14,13 +12,11 @@ export interface IGameSocketData {
     shootingStar: {
         voted: number;
         total: number;
-        isVoted: boolean;
+        hasVoted: boolean;
         isVoting: boolean;
     };
     played?: {
         card: string;
-        isShootingStar: boolean;
-        isSmallest: boolean;
         player: {
             _id: string;
             nickname: string;
@@ -86,6 +82,7 @@ export interface ClientToServerEvents {
     "game:player:join": () => void;
     "game:player:play": (card: string) => void;
     "game:lobby:player:kick": (userId: string) => void;
+    "game:player:shootingstart": () => void;
 }
 
 export interface InterServerEvents {}

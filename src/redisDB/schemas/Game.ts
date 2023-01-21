@@ -10,6 +10,7 @@ interface Game {
     roomId: string;
     cards: string[];
     shootingStars: number;
+    shootingStarVotingUserId: string;
 }
 
 class Game extends Entity {
@@ -41,9 +42,14 @@ class Game extends Entity {
 
     async handleMistake(card: string) {
         this.totalMistakes++;
-        card && await Promise.all((await this.players).map(async (player) => {
-            await player.removeCardsLessThanOrEqual(card);
-        }));
+        card &&
+            (await Promise.all(
+                (
+                    await this.players
+                ).map(async (player) => {
+                    await player.removeCardsLessThanOrEqual(card);
+                })
+            ));
         await gameRepository.save(this);
     }
 
@@ -68,17 +74,15 @@ class Game extends Entity {
     }
 
     public getPlayers(isConnected: boolean = null) {
-        let query = playerRepository .search()
-            
-        .where("gameId")
-        .eq(this.entityId)
+        let query = playerRepository
+            .search()
+
+            .where("gameId")
+            .eq(this.entityId);
         if (isConnected != null) {
-            query = query.where("isConnected").eq(isConnected)
+            query = query.where("isConnected").eq(isConnected);
         }
-        return query
-            .sortBy("userNickname")
-            .return
-            .all();
+        return query.sortBy("userNickname").return.all();
     }
 
     get players(): Promise<Player[]> {
@@ -146,7 +150,9 @@ class Game extends Entity {
     get hasGameEnded(): Promise<boolean> {
         return new Promise(async (resolve) => {
             this.hasRoundEnded.then((hasRoundEnded) => {
-                resolve(hasRoundEnded && this.currentLevel >= Game.LAST_LEVEL_NUMBER);
+                resolve(
+                    hasRoundEnded && this.currentLevel >= Game.LAST_LEVEL_NUMBER
+                );
             });
         });
     }
@@ -192,13 +198,47 @@ class Game extends Entity {
         );
     }
 
+    async startShootingStarVoting(userId: string) {
+        this.shootingStarVotingUserId = userId;
+        (await this.players).forEach((player) => {
+            player.set({ hasVotedShootingStar: false });
+        });
+        await gameRepository.save(this);
+    }
+
+    async endShootingStarVoting() {
+        this.shootingStarVotingUserId = null;
+        await gameRepository.save(this);
+    }
+
+    get shootingStarVoted(): Promise<number> {
+        return new Promise((resolve) => {
+            this.players.then((players) => {
+                resolve(players.filter((player) => player.hasVotedShootingStar).length);
+            });
+        });
+    }
+
+    get shootingStarTotal(): Promise<number> {
+        return new Promise((resolve) => {
+            this.players.then((players) => {
+                resolve(players.length);
+            });
+        });
+    }
+
     static async create({ roomId }: { roomId: string }) {
         const gameEntity = await gameRepository.createAndSave({
             roomId,
             currentLevel: 0,
             totalMistakes: 0,
+            shootingStarVotingUserId: null,
         });
         return gameEntity;
+    }
+
+    get isShootingStarVoting() {
+        return !!this.shootingStarVotingUserId;
     }
 
     async addCard(...card: string[]) {
@@ -215,6 +255,7 @@ const schema = new Schema(
         roomId: { type: "string" },
         cards: { type: "string[]" },
         shootingStars: { type: "number" },
+        shootingStarVotingUserId: { type: "string" },
     },
     {
         dataStructure: "JSON",
