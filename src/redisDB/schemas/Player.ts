@@ -1,6 +1,5 @@
 import User from "@schemas/user.schema";
 import { Entity, Schema } from "redis-om";
-// import { cardRepository } from "./Card";
 import client from "../setup";
 import { gameRepository } from "./Game";
 
