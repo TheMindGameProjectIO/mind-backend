@@ -24,18 +24,20 @@ class Player extends Entity {
     }
 
     static async disconnectAll() {
-        const players = await playerRepository.search().where("isConnected").eq(true).returnAll()
+        const players = await playerRepository
+            .search()
+            .where("isConnected")
+            .eq(true)
+            .returnAll();
         players.forEach(async (player) => {
             await player.disconnect();
-        })
-
+        });
     }
 
     async set({ isConnected, hasVotedShootingStar }: Partial<Player>) {
-        if (isConnected)
-        this.isConnected = isConnected;
-        if (hasVotedShootingStar)
-        this.hasVotedShootingStar = hasVotedShootingStar;
+        if (isConnected != null) this.isConnected = isConnected;
+        if (hasVotedShootingStar != null)
+            this.hasVotedShootingStar = hasVotedShootingStar;
         await playerRepository.save(this);
     }
 
@@ -60,7 +62,7 @@ class Player extends Entity {
         return this.cards.includes(card);
     }
 
-    async 
+    async;
 
     async playCard(card: string) {
         const game = await gameRepository.fetch(this.gameId);
@@ -72,7 +74,7 @@ class Player extends Entity {
         userId,
         gameId,
         userNickname,
-    }: Pick<Player, 'userId' | 'gameId' | 'userNickname'>) {
+    }: Pick<Player, "userId" | "gameId" | "userNickname">) {
         const userEntity = await playerRepository.createAndSave({
             userId,
             gameId,
@@ -106,6 +108,7 @@ const schema = new Schema(Player, {
     isConnected: { type: "boolean" },
     cards: { type: "string[]" },
     userNickname: { type: "string" },
+    hasVotedShootingStar: { type: "boolean" },
 });
 
 const playerRepository = client.fetchRepository(schema);

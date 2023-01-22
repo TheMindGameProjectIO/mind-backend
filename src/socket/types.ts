@@ -14,6 +14,7 @@ export interface IGameSocketData {
         total: number;
         hasVoted: boolean;
         isVoting: boolean;
+        nickname: string;
     };
     played?: {
         card: string;
@@ -80,7 +81,7 @@ export interface ClientToServerEvents {
     "game:player:join": () => void;
     "game:player:play": (card: string) => void;
     "game:lobby:player:kick": (userId: string) => void;
-    "game:player:shootingstart": () => void;
+    "game:player:shootingstar": (accept: boolean) => void;
 }
 
 export interface InterServerEvents {}

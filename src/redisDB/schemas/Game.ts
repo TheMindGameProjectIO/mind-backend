@@ -16,7 +16,7 @@ interface Game {
 }
 
 class Game extends Entity {
-    public static LAST_LEVEL_NUMBER: number = 3; //TODO: change to 12
+    public static LAST_LEVEL_NUMBER: number = 12; //TODO: change to 12
     protected _players: Player[] = null;
     get hasStarted() {
         return this.currentLevel > 0;
@@ -149,6 +149,15 @@ class Game extends Entity {
             .first();
     }
 
+    get shootingStarVotingPlayer() {
+        if (!this.shootingStarVotingUserId) return null;
+        return playerRepository
+            .search()
+            .where("userId")
+            .eq(this.shootingStarVotingUserId)
+            .return.first();
+    }
+
     get hasGameEnded(): Promise<boolean> {
         return new Promise(async (resolve) => {
             this.hasRoundEnded.then((hasRoundEnded) => {
@@ -180,7 +189,7 @@ class Game extends Entity {
     }
 
     static findByRoomId(roomId: string) {
-        return gameRepository.search().where("roomId").equals(roomId).first();
+        return gameRepository.search().where("roomId").equals(roomId).return.first();
     }
 
     findPlayerByUserId(userId: string) {
@@ -202,21 +211,25 @@ class Game extends Entity {
 
     async startShootingStarVoting(userId: string) {
         this.shootingStarVotingUserId = userId;
-        (await this.players).forEach((player) => {
-            player.set({ hasVotedShootingStar: false });
-        });
         await gameRepository.save(this);
     }
 
-    async endShootingStarVoting() {
+    async endShootingStarVoting(success: boolean = true) {
         this.shootingStarVotingUserId = null;
+        (await this.players).forEach((player) => {
+            player.set({ hasVotedShootingStar: false });
+        });
+        success && this.shootingStars--;
         await gameRepository.save(this);
     }
 
     get shootingStarVoted(): Promise<number> {
         return new Promise((resolve) => {
             this.players.then((players) => {
-                resolve(players.filter((player) => player.hasVotedShootingStar).length);
+                resolve(
+                    players.filter((player) => player.hasVotedShootingStar)
+                        .length
+                );
             });
         });
     }
@@ -230,7 +243,9 @@ class Game extends Entity {
     }
 
     static async create({ roomId }: { roomId: string }) {
-        const authorId = await Room.findById(roomId).then((room) => room.authorId.toString());
+        const authorId = await Room.findById(roomId).then((room) =>
+            room.authorId.toString()
+        );
         const gameEntity = await gameRepository.createAndSave({
             roomId,
             authorId,
