@@ -1,4 +1,4 @@
-http://161.35.194.255 http://localhost {
+http://api.themindgame.me http://localhost {
     # Compress responses according to Accept-Encoding headers
     encode gzip zstd
 
@@ -12,7 +12,7 @@ http://161.35.194.255 http://localhost {
     file_server
 }
 
-https://161.35.194.255 https://localhost {
+https://api.themindgame.me https://localhost {
     # Compress responses according to Accept-Encoding headers
     encode gzip zstd
 
