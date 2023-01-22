@@ -6,6 +6,8 @@ ADD package-lock.json /tmp/package-lock.json
 
 RUN rm -rf dist
 
+RUN rm -rf tsconfig.tsbuildinfo
+
 RUN cd /tmp && npm install
 
 ADD ./ /app
@@ -14,8 +16,6 @@ RUN rm -rf /app/node_modules && cp -a /tmp/node_modules /app/
 
 WORKDIR /app
 
-RUN npm run build
-
 RUN pwd
 
-CMD ["npm", "run", "prod:run"]
+CMD ["npm", "run", "dev:post"]

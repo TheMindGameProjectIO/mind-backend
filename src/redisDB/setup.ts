@@ -3,7 +3,7 @@ import { Client } from "redis-om";
 import env from "@utils/env";
 
 const connection = createClient({
-  url: env.REDIS_DB_LOCAL_URL,
+    url: env.REDIS_DB_LOCAL_URL,
 });
 
 await connection.connect();

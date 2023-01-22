@@ -2,7 +2,6 @@ version: "3.7"
 services:
     themindgame-node:
         container_name: themindgame-node
-        restart: unless-stopped
         environment:
             - NODE_ENV=development
         build:
@@ -13,6 +12,9 @@ services:
             - "3000:3000"
         depends_on:
             - redis-stack
+        volumes:
+            # mount your code folder into the app folder
+            - .:/app
     redis-stack:
         image: "redis/redis-stack-server:latest"
         ports:

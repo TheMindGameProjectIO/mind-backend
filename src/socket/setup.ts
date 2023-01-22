@@ -9,7 +9,7 @@ import {
     ISocket,
     ServerToClientEvents,
 } from "@/socket/types";
-import User, { IUserDocument } from "@schemas/user.schema";
+import User from "@schemas/user.schema";
 import { getCurrentDate } from "@utils/datetime";
 import socketHandler from "@socket/index";
 import { SocketData } from "./classes";
