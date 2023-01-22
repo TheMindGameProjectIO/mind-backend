@@ -8,7 +8,8 @@ export interface IGameSocketData {
         _id: string;
         nickname: string;
         cards: string[];
-    },
+        reaction: string;
+    };
     shootingStar: {
         voted: number;
         total: number;
@@ -21,8 +22,8 @@ export interface IGameSocketData {
         player: {
             _id: string;
             nickname: string;
-        }
-    },
+        };
+    };
     game: {
         _id: string;
         cards: string[];
@@ -37,6 +38,7 @@ export interface IGameSocketData {
             nickname: string;
             cards: number;
             isOnline: boolean;
+            reaction: string;
         }[];
     };
 }
@@ -50,7 +52,7 @@ export interface IGameLobbySocketData {
     users: {
         _id: string;
         nickname: string;
-    }[]
+    }[];
 }
 
 export interface ServerToClientEvents {
@@ -71,6 +73,7 @@ export interface ServerToClientEvents {
     "game:self:left": () => void;
     "game:started": () => void;
     "game:changed": (game: IGameSocketData) => void;
+    "game:lobby:player:kicked": () => void;
 }
 
 export interface ClientToServerEvents {
@@ -82,6 +85,7 @@ export interface ClientToServerEvents {
     "game:player:play": (card: string) => void;
     "game:lobby:player:kick": (userId: string) => void;
     "game:player:shootingstar": (accept: boolean) => void;
+    "game:player:react": (reaction: string) => void;
 }
 
 export interface InterServerEvents {}

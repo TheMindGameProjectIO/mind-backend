@@ -11,6 +11,7 @@ interface Player {
     cards: string[];
     userNickname: string;
     hasVotedShootingStar: boolean;
+    reaction: string;
 }
 
 class Player extends Entity {
@@ -81,8 +82,14 @@ class Player extends Entity {
             cards: [],
             userNickname,
             hasVotedShootingStar: false,
+            reaction: null,
         });
         return userEntity;
+    }
+
+    async setReaction(reaction: string) {
+        this.reaction = reaction;
+        await playerRepository.save(this);
     }
 
     static async findByUserId(userId: string) {
@@ -108,6 +115,7 @@ const schema = new Schema(Player, {
     cards: { type: "string[]" },
     userNickname: { type: "string" },
     hasVotedShootingStar: { type: "boolean" },
+    reaction: { type: "string" },
 });
 
 const playerRepository = client.fetchRepository(schema);

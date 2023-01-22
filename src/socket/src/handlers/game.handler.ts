@@ -6,7 +6,6 @@ import { IGameSocket } from "@socket/types";
 import Room from "@schemas/room.schema";
 import {
     getGameLobbySocketData,
-    getGameSocketData,
     handleGameProcessFactory,
     IPlayed,
     sendSocketDataAllFactory,
@@ -110,7 +109,18 @@ async function gameHandler(socket: IGameSocket) {
     const sendSocketDataAll = sendSocketDataAllFactory(roomId, userId);
     const handleGameProcess = handleGameProcessFactory(roomId, userId);
 
+    socket.on("game:lobby:player:kick", async (userId) => {
+        logger.info(`user:${nickname}${userId} has been kicked`);
+        const player = await game.findPlayerByUserId(userId);
+        socketHandler.io.to(player.userId).emit("game:lobby:player:kicked");
+        const sockets = await socketHandler.io.in(player.userId).fetchSockets();
+        sockets.forEach((socket) => {
+            socketHandler.delete(socket as any, "You have been kicked");
+        });
+    });
+
     const gameLoop = async () => {
+        socket.removeAllListeners("game:lobby:player:kick");
         logger.info(`user:${userId} has started the game`);
 
         await sendSocketDataAll();
@@ -195,6 +205,13 @@ async function gameHandler(socket: IGameSocket) {
                 await sendSocketDataAll({ played });
             })
         );
+
+        socket.on("game:player:react", async (reaction) => {
+            logger.info(`user:${userId} has reacted ${reaction}`);
+            const player = await game.findPlayerByUserId(userId);
+            await player.setReaction(reaction);
+            await sendSocketDataAll();
+        });
     };
 
     /**
@@ -206,6 +223,8 @@ async function gameHandler(socket: IGameSocket) {
         const player = await game.findPlayerByUserId(userId);
         socket.removeAllListeners("game:player:play");
         socket.removeAllListeners("game:player:shootingstar");
+        socket.removeAllListeners("game:player:react");
+        socket.removeAllListeners("game:lobby:player:kick");
 
         if (game.hasStarted) {
             await player.disconnect();

@@ -32,6 +32,7 @@ export const getGameSocketData = async ({
             _id: player.userId,
             nickname: player.userNickname,
             cards: player.cards,
+            reaction: player.reaction,
         };
     }
     if (player) {
@@ -59,6 +60,7 @@ export const getGameSocketData = async ({
                 nickname: player.userNickname,
                 cards: player.cards.length,
                 isOnline: player.isConnected,
+                reaction: player.reaction,
             };
         }),
     };
