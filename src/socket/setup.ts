@@ -38,6 +38,7 @@ const io = new Server<
     InterServerEvents,
     SocketData
 >(server, {
+    path: "/",
     cors: {
         origin: "*",
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
