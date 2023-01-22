@@ -165,6 +165,7 @@ async function gameHandler(socket: IGameSocket) {
             handleGameProcess(async (card) => {
                 logger.info(`user:${userId} has played ${card} ${socket.id}`);
                 const game = await Game.findById(gameId);
+                if (game.isShootingStarVoting) return;
                 let currentPlayer = await game.findPlayerByUserId(userId);
                 const played: IPlayed = {
                     card,

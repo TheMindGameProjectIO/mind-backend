@@ -95,7 +95,6 @@ export const handleGameProcessFactory = (roomId: string, userId: string) => {
         return (async (...args) => {
             {
                 const game = await Game.findByRoomId(roomId);
-                if (game.isShootingStarVoting) return;
                 if ((await game.hasLost) || (await game.hasWon)) return;
             }
             // @ts-ignore
