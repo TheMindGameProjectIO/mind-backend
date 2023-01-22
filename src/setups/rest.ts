@@ -3,16 +3,16 @@ import cors from "cors";
 import morgan from "morgan";
 import compression from "compression";
 import session, { SessionOptions } from "express-session";
-import { injectErrorDBHandlerToResponse, injectDefaultErrors } from "@/middlewares/error.middleware";
+import {
+    injectErrorDBHandlerToResponse,
+    injectDefaultErrors,
+} from "@/middlewares/error.middleware";
 import path from "path";
 import { fileURLToPath } from "url";
 import hbs from "@setups/view";
 import env from "@/utils/env";
-import connectRedis from 'connect-redis';
-import { connection } from "@/redisDB/setup";
-import { getValuesFromEnum, Header } from "@/utils/enum";
-
-const RedisStore = connectRedis(session);
+import MongoStore from "connect-mongo";
+import { getValuesFromEnum, Header } from "@utils/enum";
 
 const app = express();
 app.use(compression());
@@ -22,7 +22,7 @@ var sess: SessionOptions = {
     secret: env.SESSION_SECRET_KEY,
     resave: false,
     saveUninitialized: true,
-    // store: new RedisStore({ client: connection }),
+    store: MongoStore.create({ mongoUrl: env.MONGO_DB_URL }),
     cookie: {
         secure: false,
     },
@@ -40,11 +40,21 @@ const __dirname = path.dirname(__filename);
 
 app.use(
     cors({
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", ],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         credentials: true,
-        origin: '*',
-        exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
-        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
+        origin: "*",
+        exposedHeaders: [
+            "Content-Type",
+            ...getValuesFromEnum(Header),
+            "Access-Control-Allow-Origin",
+            "ngrok-skip-browser-warning",
+        ],
+        allowedHeaders: [
+            "Content-Type",
+            ...getValuesFromEnum(Header),
+            "Access-Control-Allow-Origin",
+            "ngrok-skip-browser-warning",
+        ],
     })
 );
 

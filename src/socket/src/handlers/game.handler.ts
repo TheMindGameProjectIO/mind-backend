@@ -113,8 +113,6 @@ async function gameHandler(socket: IGameSocket) {
     const gameLoop = async () => {
         logger.info(`user:${userId} has started the game`);
 
-        //TODO: implement when user leaves the game
-
         await sendSocketDataAll();
 
         socket.on(
@@ -212,12 +210,6 @@ async function gameHandler(socket: IGameSocket) {
         if (game.hasStarted) {
             await player.disconnect();
             await sendSocketDataAll();
-            socketHandler.io
-                .in(roomId)
-                .emit(
-                    "game:changed",
-                    await getGameSocketData({ game, player })
-                );
         } else {
             await player.remove();
             const game = await Game.findByRoomId(roomId);
