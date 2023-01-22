@@ -7,7 +7,7 @@ import env from "@utils/env";
 import { generateSocketToken } from "@utils/token";
 import { Request, Response } from "express";
 import lodash from "lodash";
-import logger from "@/setups/winston";
+import logger from "@/setups/winston.setup";
 
 export const createRoom = async (
     req: Request<{}, {}, IRoomCreateForm>,
@@ -142,7 +142,7 @@ export const getGame = async (
                     _id: player.userId,
                     nickname: player.userNickname,
                     cards: player.cards.length,
-                }
+                };
             }),
         },
         cards: player.cards,
@@ -152,9 +152,7 @@ export const getGame = async (
 export const playCard = async (
     req: Request<{ id: string }, {}, { card: string }>,
     res: Response
-) => {
-    
-};
+) => {};
 
 export const getPlayers = async (
     req: Request<{ id: string }, {}, { card: string }>,

@@ -1,6 +1,6 @@
 import Game from "@redisDB/schemas/Game";
 import Player from "@redisDB/schemas/Player";
-import logger from "@setups/winston";
+import logger from "@/setups/winston.setup";
 import socketHandler from "@/socket";
 import { IGameSocket } from "@socket/types";
 import Room from "@schemas/room.schema";

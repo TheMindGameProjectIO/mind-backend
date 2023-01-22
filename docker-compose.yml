@@ -1,27 +1,35 @@
-# version: "3"
-# services:
-#   node:
-#     image: "node:18.12.1-alpine"
-#     volumes:
-#       - .:/Users/user/core/main/mixed/mixed/projects/themindgame
-#     working_dir: /Users/user/core/main/mixed/mixed/projects/themindgame
-#     command: "npm run dev"
-#     ports:
-#       - "8000:8000"
-#       - "3000:3000"
-#     depends_on:
-#       - redis-stack
-#   redis-stack:
-#     image: "redis/redis-stack-server:latest"
-#     ports:
-#       - "6379:6379"
-      
-version: "3"
+version: "3.7"
 services:
-  redis-stack:
-    image: "redis/redis-stack-server:latest"
-    ports:
-      - 6379:6379
-      - 8001:8001
-      
+    themindgame-node:
+        container_name: themindgame-node
+        restart: unless-stopped
+        environment:
+            - NODE_ENV=production
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        ports:
+            - "8000:8000"
+            - "3000:3000"
+        depends_on:
+            - redis-stack
+    redis-stack:
+        image: "redis/redis-stack-server:latest"
+        ports:
+            - "6379:6379"
+#     caddy:
+#         image: caddy:2.6.2-alpine
+#         container_name: caddy-service
+#         restart: unless-stopped
+#         ports:
+#             - "80:80"
+#             - "443:443"
+#         volumes:
+#             - $PWD/Caddyfile:/etc/caddy/Caddyfile
+#             - $PWD/site:/srv
+#             - caddy_data:/data
+#             - caddy_config:/config
 
+# volumes:
+#     caddy_data:
+#     caddy_config:

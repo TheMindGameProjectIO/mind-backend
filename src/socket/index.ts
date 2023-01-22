@@ -2,7 +2,7 @@ import io from "@socket/setup";
 import { ISocket, ServerToClientEvents } from "@socket/types";
 import { IUser } from "@models/user.model";
 import { EventParams } from "socket.io/dist/typed-events";
-import logger from "@setups/winston";
+import logger from "@/setups/winston.setup";
 
 const socketHandler = {
     io,
@@ -19,7 +19,7 @@ const socketHandler = {
         const userId = socket.data.user?._id.toString();
         logger.info(`user:${userId} is deleted (${message})`);
         socket.leave(userId as string);
-        socket.emit("response", "connection", {message, status: "fail"});
+        socket.emit("response", "connection", { message, status: "fail" });
         socket.disconnect();
     },
 
