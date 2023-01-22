@@ -1,4 +1,4 @@
-api.themindgame.me {
+api.themindgame.me localhost {
     # Compress responses according to Accept-Encoding headers
     encode gzip zstd
 
