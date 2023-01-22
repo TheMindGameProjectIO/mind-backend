@@ -7,7 +7,7 @@
     "scripts": {
         "build": "npx tsc && npx tsc-alias",
         "test": "echo \"Tests passed!\"",
-        "prod": "docker-compose -f docker-compose.prod.yml up --build",
+        "prod": "docker compose -f docker-compose.prod.yml up --build",
         "prod:pre": "cp /home/cicd/apps/mind-backend/.env.prod .env.prod",
         "prod:run": "node dist/index.js",
         "dev:post": "npx tsc-alias && NODE_ENV=development node --inspect dist/index.js",
