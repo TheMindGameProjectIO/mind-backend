@@ -1,4 +1,18 @@
-161.35.194.255:433 161.35.194.255:80 localhost:80 localhost:443 {
+http://161.35.194.255 http://localhost {
+    # Compress responses according to Accept-Encoding headers
+    encode gzip zstd
+
+    # Send API requests to backend
+    reverse_proxy /api/* themindgame-node:8000
+    
+    # Send API requests to backend
+    reverse_proxy /socket/* themindgame-node:3000 
+    
+    # Serve everything else from the file system
+    file_server
+}
+
+https://161.35.194.255 https://localhost {
     # Compress responses according to Accept-Encoding headers
     encode gzip zstd
 
