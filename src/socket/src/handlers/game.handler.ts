@@ -2,137 +2,15 @@ import Game from "@redisDB/schemas/Game";
 import Player from "@redisDB/schemas/Player";
 import logger from "@setups/winston";
 import socketHandler from "@/socket";
-import {
-    IGameLobbySocketData,
-    IGameSocket,
-    IGameSocketData,
-} from "@/socket/types";
+import { IGameSocket } from "@socket/types";
 import Room from "@schemas/room.schema";
-import { IRoom } from "@/models/room.model";
-
-type IPlayed = Pick<IGameSocketData["played"], "card">;
-
-const getGameSocketData = async ({
-    game,
-    player,
-    currentPlayer = null,
-    played = null,
-}: {
-    played?: IPlayed;
-    game: Game;
-    player: Player;
-    currentPlayer?: Player;
-}): Promise<IGameSocketData> => {
-    const data = {} as IGameSocketData;
-    if (played && currentPlayer) {
-        data.played = {
-            ...played,
-            player: {
-                _id: currentPlayer.userId,
-                nickname: currentPlayer.userNickname,
-            },
-        };
-    }
-    if (player) {
-        data.player = {
-            _id: player.userId,
-            nickname: player.userNickname,
-            cards: player.cards,
-        };
-    }
-    if (player) {
-        const shootingStarVotingPlayer = await game.shootingStarVotingPlayer;
-        data.shootingStar = {
-            isVoting: game.isShootingStarVoting,
-            hasVoted: player.hasVotedShootingStar,
-            voted: await game.shootingStarVoted,
-            total: await game.shootingStarTotal,
-            nickname: shootingStarVotingPlayer?.userNickname,
-        };
-    }
-    data.game = {
-        _id: game.entityId,
-        cards: game.cards,
-        hasWon: await game.hasWon,
-        hasLost: await game.hasLost,
-        mistakesLeft: await game.mistakesLeft,
-        totalMistakes: game.totalMistakes,
-        hasShootingStar: game.hasShootingStar,
-        currentLevel: game.currentLevel,
-        players: (await game.players).map((player) => {
-            return {
-                _id: player.userId,
-                nickname: player.userNickname,
-                cards: player.cards.length,
-                isOnline: player.isConnected,
-            };
-        }),
-    };
-    return data;
-};
-
-const sendSocketDataAllFactory =
-    (roomId: string, userId: string) =>
-    async ({ played = null }: { played?: IPlayed } = {}) => {
-        const game = await Game.findByRoomId(roomId);
-        const currentPlayer = await game.findPlayerByUserId(userId);
-        const sockets = await socketHandler.io.in(roomId).fetchSockets();
-        await Promise.all(
-            sockets.map(async (socket) => {
-                const player = await game.findPlayerByUserId(
-                    socket.data.user._id
-                );
-                socket.emit(
-                    "game:changed",
-                    await getGameSocketData({
-                        game,
-                        player,
-                        played,
-                        currentPlayer,
-                    })
-                );
-            })
-        );
-    };
-
-const handleRoundEndFactory = (roomId: string, userId: string) => {
-    const sendSocketDataAll = sendSocketDataAllFactory(roomId, userId);
-    return <T>(callback: T) => {
-        return (async (...args) => {
-            // @ts-ignore
-            await callback(...args);
-            const game = await Game.findByRoomId(roomId);
-            if (
-                (await game.hasRoundEnded) &&
-                !(await game.hasWon) &&
-                !(await game.hasLost)
-            ) {
-                game.currentLevel++;
-                await game.startLevel();
-                await sendSocketDataAll();
-            }
-        }) as T;
-    };
-};
-
-const getGameLobbySocketData = async (
-    game: Game,
-    room: IRoom
-): Promise<IGameLobbySocketData> => {
-    return {
-        name: room.name,
-        authorId: room.authorId.toString(),
-        invitationLink: room.invitationLink,
-        roomId: game.roomId,
-        users: (await game.getPlayers(true)).map((player) => {
-            return {
-                _id: player.userId,
-                nickname: player.userNickname,
-            };
-        }),
-        maxUserCount: room.maxUserCount,
-    };
-};
+import {
+    getGameLobbySocketData,
+    getGameSocketData,
+    handleGameProcessFactory,
+    IPlayed,
+    sendSocketDataAllFactory,
+} from "@socket/utils/game.util";
 
 async function gameHandler(socket: IGameSocket) {
     const userId = socket.data.user._id.toString();
@@ -230,7 +108,7 @@ async function gameHandler(socket: IGameSocket) {
         .emit("game:lobby:changed", await getGameLobbySocketData(game, room));
 
     const sendSocketDataAll = sendSocketDataAllFactory(roomId, userId);
-    const handleRoundEnd = handleRoundEndFactory(roomId, userId);
+    const handleGameProcess = handleGameProcessFactory(roomId, userId);
 
     const gameLoop = async () => {
         logger.info(`user:${userId} has started the game`);
@@ -241,7 +119,7 @@ async function gameHandler(socket: IGameSocket) {
 
         socket.on(
             "game:player:shootingstar",
-            handleRoundEnd(async (accept) => {
+            handleGameProcess(async (accept) => {
                 logger.info(
                     `user:${nickname}${userId} has started the shooting star`
                 );
@@ -284,16 +162,13 @@ async function gameHandler(socket: IGameSocket) {
 
         socket.on(
             "game:player:play",
-            handleRoundEnd(async (card) => {
+            handleGameProcess(async (card) => {
                 logger.info(`user:${userId} has played ${card} ${socket.id}`);
                 const game = await Game.findById(gameId);
                 let currentPlayer = await game.findPlayerByUserId(userId);
                 const played: IPlayed = {
                     card,
                 };
-
-                if (game.isShootingStarVoting) return;
-                if ((await game.hasLost) || (await game.hasWon)) return;
 
                 // find smallest card
                 const cards = (await game.playerCards).map((card) => +card);
