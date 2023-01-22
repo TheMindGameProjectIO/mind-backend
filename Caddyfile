@@ -1,26 +1,26 @@
-http://api.themindgame.me http://localhost {
+http://localhost {
     # Compress responses according to Accept-Encoding headers
     encode gzip zstd
 
     # Send API requests to backend
-    reverse_proxy /api/* themindgame-node:8000
+    reverse_proxy /api/* api:8000
     
     # Send API requests to backend
-    reverse_proxy /socket/* themindgame-node:3000 
+    reverse_proxy /socket/* api:3000 
     
     # Serve everything else from the file system
     file_server
 }
 
-https://api.themindgame.me https://localhost {
+api.themindgame.me https://localhost {
     # Compress responses according to Accept-Encoding headers
     encode gzip zstd
 
     # Send API requests to backend
-    reverse_proxy /api/* themindgame-node:8000
+    reverse_proxy /api/* api:8000
     
     # Send API requests to backend
-    reverse_proxy /socket/* themindgame-node:3000 
+    reverse_proxy /socket/* api:3000 
     
     # Serve everything else from the file system
     file_server

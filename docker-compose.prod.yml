@@ -1,7 +1,7 @@
 version: "3.7"
 services:
-    themindgame-node:
-        container_name: themindgame-node
+    api:
+        container_name: api
         restart: unless-stopped
         environment:
             - NODE_ENV=production
