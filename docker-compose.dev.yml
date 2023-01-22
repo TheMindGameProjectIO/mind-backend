@@ -4,10 +4,10 @@ services:
         container_name: themindgame-node
         restart: unless-stopped
         environment:
-            - NODE_ENV=production
+            - NODE_ENV=development
         build:
             context: ./
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile.dev
         ports:
             - "8000:8000"
             - "3000:3000"

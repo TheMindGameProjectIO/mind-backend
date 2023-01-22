@@ -15,5 +15,7 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 18
+            - name: Prepare env file
+              run: npm run prod:pre
             - name: Docker Compose
-              run: npm run start:digital_ocean
+              run: npm run prod
