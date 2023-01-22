@@ -21,6 +21,8 @@ jobs:
               run: npm run build
             - name: Test
               run: npm run test
+            - name: Where is PM2
+              run: which pm2
             # - name: PM2 install
             #   run: npm run pm2:install
             # - name: PM2 stop
