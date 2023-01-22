@@ -5,27 +5,26 @@ import {Request, Response, NextFunction} from "express";
 import {UserRole} from "@utils/enum";
 
 
-const authenticate = (req: Request, res: Response, next: NextFunction) => {
+const authenticate = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization');
-    if (!token) res.errors.notEnoughPermissions();
+    if (!token) return res.errors.notAuthorized();
     let payload: IAuthPayload;
     try{
         payload = jwt.verify(token, process.env.SECRET_KEY) as IAuthPayload;
-    } catch {
+    } catch (error) {
         payload = {} as IAuthPayload;
     }
     const {_id} = payload;
-    if (!_id) res.errors.notEnoughPermissions();
-    User.findById(_id, (err, user) => {
-        if (!user) res.errors.notEnoughPermissions();
-        req.user = user;
-        next();
-    });
+    if (!_id) return res.errors.notAuthorized();
+    const user = await User.findById(_id).catch(() => null);
+    if (!user) return res.errors.notAuthorized();
+    req.user = user;
+    next();
 }
 
 const role = (role: UserRole) => (req: Request, res: Response, next: NextFunction) => {
     if (req.user.role < role)
-        res.errors.notEnoughPermissions();
+        return res.errors.notEnoughPermissions();
     next();
 }
 

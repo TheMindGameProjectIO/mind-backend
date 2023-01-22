@@ -2,7 +2,7 @@ import { Model, Schema, HydratedDocument, model, PreSaveMiddlewareFunction, Quer
 import { hashPassword } from "@utils/password";
 import { DBCollections, getKeysFromEnum, getValuesFromEnum, UserRole } from "@utils/enum";
 import { generateAuthToken } from "@utils/token";
-import { IUser } from "@models/user.model";
+import { IUser, IUserRegister } from "@models/user.model";
 import Token from "@schemas/token.schema";
 import * as util from "util";
 import { getCurrentDate } from "@utils/datetime";
@@ -53,7 +53,6 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
         role: {
             type: Number,
             default: UserRole.Guest,
-            enum: getValuesFromEnum(UserRole),
         },
     },
     {
@@ -70,6 +69,9 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
             // }
         },
         statics: {
+            create(user: IUserRegister) {
+                return User.create({...user, role: UserRole.Guest});
+            },
             findByEmail(email: string) {
                 return User.findOne({ email });
             },

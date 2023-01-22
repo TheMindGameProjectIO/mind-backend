@@ -1,4 +1,4 @@
-enum UserRole {
+export enum UserRole {
     Guest = 0,
     User = 1,
     Admin = 2,
@@ -24,9 +24,9 @@ export enum ISocketAuthType {
 }
 
 enum Header {
-    Authorization = "Authorization",
-    SocketAuthorization = "Socket-Authorization",
-    SOCKET_GAME_AUTHORATION = "Socket-Game-Authorization",
+    AUTHORIZATION = "authorization",
+    SOCKET_AUTHORIZATION = "socket-authorization",
+    SOCKET_GAME_AUTHORIZATION = "socket-game-authorization",
 }
 
 const getKeysFromEnum = (enumObject: any) => {
@@ -38,4 +38,4 @@ const getValuesFromEnum = (enumObject: any) => {
         .map((key) => enumObject[key]);
 };
 
-export { getKeysFromEnum, getValuesFromEnum, Header, UserRole, TokenType, DBCollections };
+export { getKeysFromEnum, getValuesFromEnum, Header, TokenType, DBCollections };

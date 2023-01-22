@@ -37,7 +37,6 @@ const tokenSchema = new Schema<IToken, TokenModel, ITokenMethods>(
         type: {
             type: Number,
             required: true,
-            enum: getValuesFromEnum(TokenType),
         },
         verifiedAt: {
             type: Date,

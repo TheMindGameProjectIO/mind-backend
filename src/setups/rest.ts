@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 import hbs from "@setups/view";
 import env from "@/utils/env";
 import connectRedis from 'connect-redis';
-import { connection } from "./redis";
+import { connection } from "@/redisDB/setup";
 import { getValuesFromEnum, Header } from "@/utils/enum";
 
 const RedisStore = connectRedis(session);
@@ -22,7 +22,7 @@ var sess: SessionOptions = {
     secret: env.SESSION_SECRET_KEY,
     resave: false,
     saveUninitialized: true,
-    store: new RedisStore({ client: connection }),
+    // store: new RedisStore({ client: connection }),
     cookie: {
         secure: false,
     },
@@ -43,20 +43,20 @@ app.use(
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH", ],
         credentials: true,
         origin: '*',
-        exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'Access-Control-Allow-Origin'],
-        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
+        exposedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
+        allowedHeaders: ["Content-Type", ...getValuesFromEnum(Header), 'Access-Control-Allow-Origin', 'ngrok-skip-browser-warning'],
     })
 );
 
 app.use(express.json());
 app.use(injectErrorDBHandlerToResponse);
 app.use(injectDefaultErrors);
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    next();
-})
+// app.use((req, res, next) => {
+//     res.setHeader("Access-Control-Allow-Origin", "*");
+//     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
+//     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//     next();
+// })
 
 // TEMPLATE ENGINE
 app.engine("handlebars", hbs.engine);

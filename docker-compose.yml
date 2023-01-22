@@ -1,0 +1,27 @@
+# version: "3"
+# services:
+#   node:
+#     image: "node:18.12.1-alpine"
+#     volumes:
+#       - .:/Users/user/core/main/mixed/mixed/projects/themindgame
+#     working_dir: /Users/user/core/main/mixed/mixed/projects/themindgame
+#     command: "npm run dev"
+#     ports:
+#       - "8000:8000"
+#       - "3000:3000"
+#     depends_on:
+#       - redis-stack
+#   redis-stack:
+#     image: "redis/redis-stack-server:latest"
+#     ports:
+#       - "6379:6379"
+      
+version: "3"
+services:
+  redis-stack:
+    image: "redis/redis-stack-server:latest"
+    ports:
+      - 6379:6379
+      - 8001:8001
+      
+

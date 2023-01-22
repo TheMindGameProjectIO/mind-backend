@@ -14,7 +14,8 @@ declare global {
         export interface Response {
             handleDBError?: (err: any) => void;
             errors: {
-                notEnoughPermissions?: ErrorHandlerFunction
+                notEnoughPermissions?: ErrorHandlerFunction,
+                notAuthorized?: ErrorHandlerFunction
             }
         }
     }
