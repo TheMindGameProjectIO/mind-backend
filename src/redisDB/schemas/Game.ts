@@ -16,7 +16,6 @@ interface Game {
 }
 
 class Game extends Entity {
-    public static LAST_LEVEL_NUMBER: number = 12; //TODO: make dynamic based on player length
     protected _players: Player[] = null;
     get hasStarted() {
         return this.currentLevel > 0;
