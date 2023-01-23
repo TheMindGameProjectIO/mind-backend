@@ -50,9 +50,10 @@ export const getGameSocketData = async ({
         cards: game.cards,
         hasWon: await game.hasWon,
         hasLost: await game.hasLost,
+        lastLevelNumber: await game.lastLevelNumber,
         mistakesLeft: await game.mistakesLeft,
         totalMistakes: game.totalMistakes,
-        hasShootingStar: game.hasShootingStar,
+        shootingStars: game.shootingStars,
         currentLevel: game.currentLevel,
         players: (await game.players).map((player) => {
             return {

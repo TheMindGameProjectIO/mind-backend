@@ -16,10 +16,18 @@ interface Game {
 }
 
 class Game extends Entity {
-    public static LAST_LEVEL_NUMBER: number = 12; //TODO: change to 12
+    public static LAST_LEVEL_NUMBER: number = 12; //TODO: make dynamic based on player length
     protected _players: Player[] = null;
     get hasStarted() {
         return this.currentLevel > 0;
+    }
+
+    get lastLevelNumber(): Promise<number> {
+        return new Promise((resolve) => {
+            this.players.then((players) => {
+                resolve((players.length - 1) * 4);
+            });
+        });
     }
 
     get mistakesLeft(): Promise<number> {
@@ -161,9 +169,11 @@ class Game extends Entity {
     get hasGameEnded(): Promise<boolean> {
         return new Promise(async (resolve) => {
             this.hasRoundEnded.then((hasRoundEnded) => {
-                resolve(
-                    hasRoundEnded && this.currentLevel >= Game.LAST_LEVEL_NUMBER
-                );
+                this.lastLevelNumber.then((lastLevelNumber) => {
+                    resolve(
+                        hasRoundEnded && this.currentLevel >= lastLevelNumber
+                    );
+                });
             });
         });
     }
@@ -189,7 +199,11 @@ class Game extends Entity {
     }
 
     static findByRoomId(roomId: string) {
-        return gameRepository.search().where("roomId").equals(roomId).return.first();
+        return gameRepository
+            .search()
+            .where("roomId")
+            .equals(roomId)
+            .return.first();
     }
 
     findPlayerByUserId(userId: string) {

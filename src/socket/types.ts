@@ -29,7 +29,8 @@ export interface IGameSocketData {
         cards: string[];
         hasWon: boolean;
         hasLost: boolean;
-        hasShootingStar: boolean;
+        shootingStars: number;
+        lastLevelNumber: number;
         currentLevel: number;
         totalMistakes: number;
         mistakesLeft: number;
